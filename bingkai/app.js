@@ -374,30 +374,78 @@
     prog(null); busy(false);
   };
 
-  // ---------- WhatsApp ----------
+  // ---------- posting ke media sosial ----------
   const TAGS = '#TemanPemilih #KPUMelayani #BerAKHLAK #BanggaMelayaniBangsa #BalakEEE #KPUKalbar';
-  let capEdited = false, shareReady = null;
+  const PF = {
+    wa: { n: 'WhatsApp', max: 0, lim: 0, open: 'Buka WhatsApp Web', url: () => 'https://web.whatsapp.com/',
+      tip: 'HP/Windows: Siapkan foto → Bagikan → pilih WhatsApp dan grupnya; caption ikut terkirim. WhatsApp Web: Salin foto ini → Ctrl+V di grup → tempel caption. Tanda *bintang* = huruf tebal.' },
+    ig: { n: 'Instagram', max: 2200, lim: 20, open: 'Buka Meta Business Suite', url: () => 'https://business.facebook.com/latest/composer',
+      tip: 'Maksimal 20 foto per postingan. HP: Bagikan → pilih Instagram (Feed) → tempel caption (sudah tersalin otomatis). Laptop: unggah foto dari ZIP lewat Meta Business Suite, bisa sekaligus ke Facebook.' },
+    fb: { n: 'Facebook', max: 63206, lim: 0, open: 'Buka Meta Business Suite', url: () => 'https://business.facebook.com/latest/composer',
+      tip: 'HP: Bagikan → pilih Facebook atau Meta Business Suite → pilih Page KPU Provinsi Kalimantan Barat → tempel caption. Laptop: unggah foto dari ZIP lewat Meta Business Suite.' },
+    x: { n: 'X', max: 280, lim: 4, open: 'Buka X (caption terisi)', url: c => 'https://x.com/intent/post?text=' + encodeURIComponent(c),
+      tip: 'Maksimal 4 foto dan 280 karakter; caption dipendekkan otomatis. Saat dibagikan dikirim 3 foto pertama + slide penutup. Tombol Buka X langsung mengisi teks; lampirkan fotonya di sana.' },
+    tt: { n: 'TikTok', max: 4000, lim: 35, open: 'Buka TikTok Studio', url: () => 'https://www.tiktok.com/tiktokstudio/upload',
+      tip: 'Mode foto TikTok memuat maksimal 35 foto. HP: Bagikan → pilih TikTok → tempel caption (sudah tersalin otomatis). Laptop: unggah lewat TikTok Studio.' }
+  };
+  let cur = 'wa', shareReady = null;
+  const edited = {};
   const waMsg = t => { $('waMsg').textContent = t; };
-  function autoCap() {
-    if (capEdited) return;
-    const t = $('title').value.trim().replace(/\s+/g, ' ').toUpperCase();
-    $('cap').value = `Halo, #TemanPemilih!\n\n${t ? '*' + t + '*' : '*JUDUL KEGIATAN*'}\n\n\n${TAGS}`;
+  const clen = s => [...s].length;
+  const cut = (s, n) => clen(s) <= n ? s : [...s].slice(0, Math.max(0, n - 1)).join('').trimEnd() + '…';
+  function buildCap(pf) {
+    const T = $('title').value.trim().replace(/\s+/g, ' ').toUpperCase() || 'JUDUL KEGIATAN', D = $('desc').value.trim();
+    if (pf === 'wa') return `Halo, #TemanPemilih!\n\n*${T}*${D ? '\n\n' + D : ''}\n\n${TAGS}`;
+    if (pf === 'x') {
+      const hello = 'Halo, #TemanPemilih!\n\n';
+      let tg = ['#KPUKalbar', '#KPUMelayani', '#BerAKHLAK'];
+      const tail = () => '\n\n' + tg.join(' ');
+      let head = hello + T;
+      while (tg.length > 1 && clen(head + tail()) > 280) tg.pop();
+      if (clen(head + tail()) > 280) head = hello + cut(T, 280 - clen(hello) - clen(tail()));
+      if (D) { const room = 280 - clen(head + tail()) - 2; if (room > 24) head += '\n\n' + cut(D, room); }
+      return head + tail();
+    }
+    return `Halo, #TemanPemilih!\n\n${T}${D ? '\n\n' + D : ''}\n\n${TAGS}`;
   }
-  $('cap').addEventListener('input', () => { capEdited = $('cap').value.trim() !== ''; shareReady = null; setShareLabel(); });
-  $('title').addEventListener('input', () => { autoCap(); shareReady = null; setShareLabel(); });
+  const capOf = pf => edited[pf] != null ? edited[pf] : buildCap(pf);
+  function updCount() {
+    const v = $('cap').value, m = PF[cur].max, n = clen(v), c = $('capCount');
+    c.textContent = m ? `${n} / ${m}` : `${n} karakter`;
+    c.classList.toggle('over', !!m && n > m);
+    $('openPf').href = PF[cur].url(v);
+  }
+  function renderPf() {
+    document.querySelectorAll('.ptabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.pf === cur)));
+    $('pfName').textContent = 'untuk ' + PF[cur].n;
+    $('cap').value = capOf(cur);
+    $('pfTip').textContent = PF[cur].tip;
+    $('openPf').textContent = PF[cur].open;
+    updCount(); setShareLabel();
+  }
+  document.querySelectorAll('.ptabs button').forEach(b => b.onclick = () => { cur = b.dataset.pf; renderPf(); });
+  $('cap').addEventListener('input', () => { edited[cur] = $('cap').value; updCount(); });
+  $('capReset').onclick = () => { delete edited[cur]; renderPf(); waMsg(`Caption ${PF[cur].n} disusun ulang dari judul dan keterangan.`); };
+  ['title', 'desc'].forEach(id => $(id).addEventListener('input', () => { if (edited[cur] == null) { $('cap').value = buildCap(cur); updCount(); } }));
   ['size', 'weight', 'shadow', 'allTitle', 'fmt', 'q'].forEach(id => $(id).addEventListener('input', () => { shareReady = null; setShareLabel(); }));
-  autoCap();
 
   const inClaude = !!(window.claude && window.claude.use);
   const canShareFiles = (() => { try { return !inClaude && !!navigator.canShare && navigator.canShare({ files: [new File([new Blob(['x'], { type: 'image/jpeg' })], 'a.jpg', { type: 'image/jpeg' })] }); } catch (e) { return false; } })();
+  function pickFiles(all) {
+    const lim = PF[cur].lim;
+    if (!lim || all.length <= lim) return all;
+    const hasEnd = endOn() && /-penutup\.jpg$/.test(all[all.length - 1].name);
+    return hasEnd ? [...all.slice(0, lim - 1), all[all.length - 1]] : all.slice(0, lim);
+  }
   function setShareLabel() {
     const b = $('shareBtn');
-    if (!canShareFiles) { b.textContent = 'Bagikan (buka versi ekstensi atau situs web)'; b.disabled = true; return; }
-    b.textContent = shareReady ? `Bagikan ${shareReady.length} gambar ke WhatsApp` : 'Siapkan untuk WhatsApp';
+    if (!canShareFiles) { b.textContent = 'Bagikan (buka di HP, situs web, atau ekstensi)'; b.disabled = true; return; }
+    b.disabled = !photos.length;
+    b.textContent = shareReady ? `Bagikan ${pickFiles(shareReady).length} gambar ke ${PF[cur].n}` : 'Siapkan foto untuk dibagikan';
   }
-  if (!canShareFiles) { waMsg(inClaude ? 'Tombol Bagikan tidak tersedia di dalam claude.ai. Gunakan situs web atau ekstensi untuk berbagi langsung. Salin foto dan caption tetap bisa dipakai.' : 'Perangkat ini tidak mendukung berbagi file langsung. Gunakan Salin foto + Salin caption, atau Unduh semua.'); }
-  setShareLabel();
+  if (!canShareFiles) waMsg(inClaude ? 'Di dalam claude.ai tombol Bagikan tidak tersedia. Gunakan Salin caption + Buka, atau situs web/ekstensi.' : 'Perangkat ini tidak mendukung berbagi file langsung. Gunakan Unduh semua, lalu Salin caption + Buka platform.');
 
+  async function copyText(t) { try { await navigator.clipboard.writeText(t); return true; } catch (e) { return false; } }
   $('shareBtn').onclick = async () => {
     if (!canShareFiles || !photos.length) return;
     if (!shareReady) {
@@ -411,20 +459,25 @@
         }
         if (endOn()) { const f = await exportEnd(photos.length + 1, 'jpg'); files.push(new File([f.blob], f.name, { type: 'image/jpeg' })); }
         shareReady = files;
-        waMsg('Siap. Tekan tombol hijau sekali lagi, lalu pilih WhatsApp dan grupnya.');
+        waMsg(`Siap. Tekan tombol sekali lagi untuk membagikan ke ${PF[cur].n}. Ganti tab platform kapan saja tanpa menyiapkan ulang.`);
       } catch (e) { waMsg('Gagal menyiapkan foto: ' + e.message); }
-      $('shareBtn').disabled = false; setShareLabel();
+      setShareLabel();
       return;
     }
+    const text = $('cap').value, files = pickFiles(shareReady);
+    const copied = await copyText(text);
     try {
-      await navigator.share({ files: shareReady, text: $('cap').value, title: $('title').value.trim() });
-      waMsg('Terkirim ke menu Bagikan.');
+      await navigator.share({ files, text, title: $('title').value.trim() });
+      waMsg(cur === 'wa' ? 'Terkirim ke menu Bagikan.' : `Menu Bagikan dibuka. ${copied ? 'Caption sudah tersalin; tempel di kolom keterangan ' + PF[cur].n + '.' : 'Salin caption dengan tombol Salin caption.'}`);
     } catch (e) {
       if (e.name === 'AbortError') waMsg('Berbagi dibatalkan.');
       else waMsg('Tidak bisa membuka menu Bagikan: ' + e.message + '. Gunakan Unduh semua.');
     }
   };
-
+  $('openPf').addEventListener('click', async () => {
+    const ok = await copyText($('cap').value);
+    waMsg(ok ? `Caption tersalin. Di ${PF[cur].n}, unggah foto dari ZIP lalu tempel caption (Ctrl+V).` : 'Halaman dibuka. Salin caption dengan tombol Salin caption.');
+  });
   $('copyImg').onclick = async () => {
     if (!photos.length) return;
     try {
@@ -434,13 +487,14 @@
       })();
       waMsg('Menyalin foto...');
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobP })]);
-      waMsg('Foto tersalin. Buka grup di WhatsApp Web, tekan Ctrl+V, lalu Kirim.');
+      waMsg('Foto tersalin. Tempel (Ctrl+V) di WhatsApp Web atau kolom unggah platform.');
     } catch (e) { waMsg('Browser tidak mengizinkan menyalin gambar di sini. Gunakan Unduh foto ini saja.'); }
   };
   $('copyCap').onclick = async () => {
-    try { await navigator.clipboard.writeText($('cap').value); waMsg('Caption tersalin.'); }
-    catch (e) { $('cap').select(); waMsg('Caption sudah dipilih; tekan Ctrl+C untuk menyalin.'); }
+    if (await copyText($('cap').value)) waMsg(`Caption ${PF[cur].n} tersalin.`);
+    else { $('cap').select(); waMsg('Caption sudah dipilih; tekan Ctrl+C untuk menyalin.'); }
   };
+  renderPf();
 
   // ZIP sederhana (tanpa kompresi; JPG/PNG sudah terkompresi)
   const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();

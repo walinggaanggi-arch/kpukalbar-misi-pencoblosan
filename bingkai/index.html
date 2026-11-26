@@ -32,6 +32,12 @@ header .sp{flex:1}
 .sl label{font-weight:600}.sl output{font-variant-numeric:tabular-nums;text-align:right;color:var(--muted)}
 .sl input{accent-color:var(--m);width:100%;min-height:28px}
 #flip[aria-pressed=true]{background:var(--m);border-color:var(--m);color:#fff}
+.ptabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin-bottom:4px}
+.ptabs button{min-height:38px;padding:2px 4px;font-size:11px;letter-spacing:-.01em}
+.ptabs button[aria-selected=true]{background:var(--m);border-color:var(--m);color:#fff}
+.caphead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.cnt{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}.cnt.over{color:#c0392b;font-weight:700}
+a.btn{display:flex;align-items:center;justify-content:center;text-decoration:none;box-sizing:border-box}
 .count{font-size:12px;color:var(--muted);text-align:center;flex:none}
 .add2{flex:none;border-style:dashed;color:var(--m)}
 @media(max-width:1100px){.add2{width:150px;aspect-ratio:3/2}.count{align-self:center;width:90px}}
@@ -144,14 +150,20 @@ button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-vis
       <div class="prog" id="prog"><i></i></div>
       <div class="msg" id="msg" role="status"></div>
     </div>
-    <div class="card" style="margin-top:12px" id="waCard">
-      <h2>Kirim ke WhatsApp</h2>
-      <label class="l" for="cap">Caption</label>
-      <textarea id="cap" style="text-transform:none;min-height:120px;font-weight:500;font-size:14px" aria-label="Caption"></textarea>
-      <p class="note">Terisi otomatis dari judul. Boleh diubah; tanda *bintang* menjadi huruf tebal di WhatsApp.</p>
-      <button class="p full" id="shareBtn" style="margin-top:10px;background:#1f8f4e;border-color:#1f8f4e" disabled>Siapkan untuk WhatsApp</button>
-      <button class="full" id="copyImg" style="margin-top:8px" disabled>Salin foto ini (tempel di WhatsApp Web)</button>
-      <button class="full" id="copyCap" style="margin-top:8px">Salin caption</button>
+    <div class="card" style="margin-top:12px" id="postCard">
+      <h2>Posting ke media sosial</h2>
+      <div class="ptabs" role="tablist" aria-label="Pilih platform">
+        <button role="tab" data-pf="wa">WhatsApp</button><button role="tab" data-pf="ig">Instagram</button><button role="tab" data-pf="fb">Facebook</button><button role="tab" data-pf="x">X</button><button role="tab" data-pf="tt">TikTok</button>
+      </div>
+      <label class="l" for="desc">Keterangan kegiatan <span style="font-weight:500;color:var(--muted)">(opsional, dipakai semua platform)</span></label>
+      <textarea id="desc" style="text-transform:none;min-height:72px;font-weight:500;font-size:14px" placeholder="Contoh: KPU Provinsi Kalimantan Barat menggelar rapat evaluasi bersama KPU kabupaten/kota, Rabu (26/11)."></textarea>
+      <div class="caphead"><label class="l" for="cap">Caption <span id="pfName"></span></label><span class="cnt" id="capCount"></span></div>
+      <textarea id="cap" style="text-transform:none;min-height:140px;font-weight:500;font-size:14px" aria-label="Caption"></textarea>
+      <p class="note" id="pfTip"></p>
+      <button class="p full" id="shareBtn" style="margin-top:10px" disabled>Siapkan foto</button>
+      <a class="btn full" id="openPf" target="_blank" rel="noopener" style="margin-top:8px">Buka</a>
+      <div class="row2" style="margin-top:8px"><button id="copyCap">Salin caption</button><button id="copyImg" disabled>Salin foto ini</button></div>
+      <button class="full" id="capReset" style="margin-top:8px;min-height:36px;font-size:12px">Susun ulang caption otomatis</button>
       <div class="msg" id="waMsg" role="status"></div>
     </div>
     <div class="card" style="margin-top:12px">
