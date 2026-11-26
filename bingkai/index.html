@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bingkai Dokumentasi</title>
+<style>
+@font-face{font-family:Poppins;font-weight:500;font-display:swap;src:url(Poppins-Medium.ttf) format("truetype")}
+@font-face{font-family:Poppins;font-weight:700;font-display:swap;src:url(Poppins-Bold.ttf) format("truetype")}
+/* VOICE: alat kerja tim humas, cepat dan tenang
+   IDEA: meja kerja editor foto: daftar foto di kiri, pratinjau besar di tengah, pengaturan di kanan
+   PICTURE: pratinjau foto berbingkai dalam ukuran asli frame, bisa digeser dan di-zoom
+   COLOUR and TYPE: marun KPU sebagai aksen, latar netral terang/gelap; Poppins
+   LAYOUT: tiga kolom di layar lebar, bertumpuk di ponsel */
+:root{color-scheme:light dark;--bg:light-dark(#f4f1ee,#151112);--panel:light-dark(#fff,#211a1b);--line:light-dark(#e2dbd6,#3a2f30);--ink:light-dark(#2a1414,#f3ece8);--muted:light-dark(#76625d,#b9a9a4);--m:#771414;--m2:#8B0000;--gold:#FFB20E;--focus:light-dark(#771414,#ffb20e)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Poppins,system-ui,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:12px max(16px,3vw);background:var(--m);color:#fefaf3}
+header h1{margin:0;font-size:20px;font-weight:700;line-height:1.1}
+header p{margin:0;font-size:13px;opacity:.85}
+header .sp{flex:1}
+.wrap{display:grid;grid-template-columns:220px minmax(0,1fr) 320px;gap:16px;padding:16px max(16px,3vw);align-items:start}
+@media(max-width:1100px){.wrap{grid-template-columns:minmax(0,1fr) 320px}.list{grid-column:1/-1;order:2}}
+@media(max-width:760px){.wrap{grid-template-columns:1fr}.side{order:3}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card h2{margin:0 0 10px;font-size:14px;font-weight:700;color:var(--m)}
+@media(prefers-color-scheme:dark){.card h2{color:#f0b5a8}}:root[data-theme=dark] .card h2{color:#f0b5a8}:root[data-theme=light] .card h2{color:var(--m)}
+.list{display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 110px);overflow:auto;position:sticky;top:12px}
+@media(max-width:1100px){.list{flex-direction:row;overflow-x:auto;max-height:none;position:static}}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:14px;text-align:center;color:var(--muted);font-size:13px;cursor:pointer;flex:none}
+.drop.on{border-color:var(--m);background:light-dark(#fbeeea,#2c1d1e)}
+.drop b{display:block;color:var(--ink);font-size:14px}
+.th{position:relative;border:2px solid transparent;border-radius:10px;overflow:hidden;cursor:pointer;background:#000;flex:none;width:100%;aspect-ratio:3/2}
+@media(max-width:1100px){.th{width:150px}}
+.th canvas{display:block;width:100%;height:100%}
+.th.sel{border-color:var(--gold);box-shadow:0 0 0 2px var(--m)}
+.th .n{position:absolute;left:6px;top:6px;background:#000a;color:#fff;font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px}
+.th .u{background:var(--m)}
+.stage{display:flex;flex-direction:column;gap:10px}
+.view{position:relative;background:repeating-conic-gradient(light-dark(#e9e4e0,#2a2223) 0 25%,light-dark(#f7f4f1,#1f191a) 0 50%) 0 0/20px 20px;border-radius:12px;overflow:hidden;border:1px solid var(--line);touch-action:none}
+.view canvas{display:block;width:100%;height:auto;cursor:grab}
+.view canvas:active{cursor:grabbing}
+.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);padding:20px;pointer-events:none}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tools .grow{flex:1 1 180px;display:flex;align-items:center;gap:8px}
+.tools input[type=range]{flex:1}
+.note{font-size:12px;color:var(--muted);margin:6px 0 0}
+label.l{display:block;font-size:13px;font-weight:600;margin:10px 0 4px}
+textarea,input[type=number],select{width:100%;font:600 16px Poppins,system-ui,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px}
+textarea{min-height:96px;resize:vertical;text-transform:uppercase}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button,.btn{font:600 14px Poppins,system-ui,sans-serif;min-height:44px;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+button.p{background:var(--m);border-color:var(--m);color:#fff}
+button.p:hover{background:var(--m2)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible,.th:focus-visible,.drop:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.full{width:100%}
+.chk{display:flex;gap:8px;align-items:center;font-size:13px;margin-top:8px}
+.chk input{width:18px;height:18px;accent-color:var(--m)}
+.prog{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:10px;display:none}.prog.on{display:block}.prog i{display:block;height:100%;width:0;background:var(--m);transition:width .2s}
+.msg{font-size:13px;margin-top:8px;min-height:1.4em;color:var(--muted)}
+.frames{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.frames figure{margin:0;text-align:center;font-size:12px;color:var(--muted)}
+.frames img{width:100%;border-radius:6px;border:1px solid var(--line);background:repeating-conic-gradient(#ddd 0 25%,#fff 0 50%) 0 0/10px 10px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Bingkai Dokumentasi</h1><p>Pasang frame KPU Provinsi Kalimantan Barat dan judul kegiatan ke foto dokumentasi</p></div>
+  <div class="sp"></div>
+</header>
+<div class="wrap">
+  <section class="list" id="list" aria-label="Daftar foto">
+    <div class="drop" id="drop" tabindex="0" role="button"><b>+ Tambah foto</b>Klik atau seret foto ke sini. Bisa banyak sekaligus.</div>
+    <input type="file" id="file" accept="image/*" multiple hidden>
+  </section>
+
+  <section class="stage">
+    <div class="view" id="view"><canvas id="cv" width="1200" height="800" aria-label="Pratinjau foto berbingkai"></canvas><div class="empty" id="empty"><div><b>Belum ada foto</b><br>Tambahkan foto dokumentasi. Foto pertama memakai frame utama dan judul kegiatan, foto berikutnya memakai frame lanjutan.</div></div></div>
+    <div class="tools">
+      <div class="grow"><span style="font-size:13px">Zoom</span><input type="range" id="zoom" min="1" max="3" step="0.01" value="1" aria-label="Zoom foto"></div>
+      <button id="reset" title="Kembalikan posisi dan zoom">Atur ulang posisi</button>
+      <button id="left" title="Pindah ke urutan sebelumnya">◀ Geser urutan</button>
+      <button id="right" title="Pindah ke urutan berikutnya">Geser urutan ▶</button>
+      <button id="first">Jadikan foto utama</button>
+      <button id="del">Hapus</button>
+    </div>
+    <p class="note">Seret foto di pratinjau untuk mengatur bagian yang tampil. Pratinjau ditampilkan lebih kecil; hasil unduhan memakai resolusi penuh frame (4000 × 2667 px).</p>
+  </section>
+
+  <aside class="side">
+    <div class="card">
+      <h2>Judul kegiatan (foto utama)</h2>
+      <textarea id="title" placeholder="RAPAT EVALUASI PENGELOLAAN JARINGAN DOKUMENTASI DAN INFORMASI HUKUM (JDIH) KPU KABUPATEN/KOTA TAHUN 2026" aria-label="Judul kegiatan"></textarea>
+      <p class="note">Otomatis huruf kapital dan dipecah per baris. Tekan Enter untuk memaksa ganti baris.</p>
+      <div class="row2">
+        <div><label class="l" for="size">Ukuran (pt)</label><input type="number" id="size" value="67" min="30" max="140" step="1"></div>
+        <div><label class="l" for="weight">Ketebalan</label><select id="weight"><option value="700" selected>Bold</option><option value="500">Medium</option></select></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="shadow"> Bayangan tipis pada teks</label>
+      <label class="chk"><input type="checkbox" id="allTitle"> Tulis judul di semua foto</label>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h2>Unduh</h2>
+      <div class="row2">
+        <div><label class="l" for="fmt">Format</label><select id="fmt"><option value="jpg" selected>JPG</option><option value="png">PNG</option></select></div>
+        <div><label class="l" for="q">Kualitas JPG</label><select id="q"><option value="0.95">Tinggi</option><option value="0.9" selected>Baik</option><option value="0.8">Hemat</option></select></div>
+      </div>
+      <button class="p full" id="zipBtn" style="margin-top:12px" disabled>Unduh semua (ZIP)</button>
+      <button class="full" id="oneBtn" style="margin-top:8px" disabled>Unduh foto ini saja</button>
+      <div class="prog" id="prog"><i></i></div>
+      <div class="msg" id="msg" role="status"></div>
+    </div>
+    <div class="card" style="margin-top:12px" id="waCard">
+      <h2>Kirim ke WhatsApp</h2>
+      <label class="l" for="cap">Caption</label>
+      <textarea id="cap" style="text-transform:none;min-height:120px;font-weight:500;font-size:14px" aria-label="Caption"></textarea>
+      <p class="note">Terisi otomatis dari judul. Boleh diubah; tanda *bintang* menjadi huruf tebal di WhatsApp.</p>
+      <button class="p full" id="shareBtn" style="margin-top:10px;background:#1f8f4e;border-color:#1f8f4e" disabled>Siapkan untuk WhatsApp</button>
+      <button class="full" id="copyImg" style="margin-top:8px" disabled>Salin foto ini (tempel di WhatsApp Web)</button>
+      <button class="full" id="copyCap" style="margin-top:8px">Salin caption</button>
+      <div class="msg" id="waMsg" role="status"></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h2>Frame</h2>
+      <div class="frames">
+        <figure><img id="f1img" alt="Frame utama"><figcaption>Utama</figcaption><button class="full" data-f="1" style="margin-top:4px;min-height:36px;font-size:12px">Ganti</button></figure>
+        <figure><img id="f2img" alt="Frame lanjutan"><figcaption>Lanjutan</figcaption><button class="full" data-f="2" style="margin-top:4px;min-height:36px;font-size:12px">Ganti</button></figure>
+      </div>
+      <input type="file" id="ffile" accept="image/png" hidden>
+      <p class="note">Gunakan PNG dengan bagian tengah transparan. Frame pengganti hanya berlaku sampai halaman ditutup.</p>
+    </div>
+  </aside>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

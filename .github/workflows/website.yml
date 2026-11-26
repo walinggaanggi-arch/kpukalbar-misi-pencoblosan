@@ -23,8 +23,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: actions/configure-pages@v5
+      - name: Susun situs (game + alat bingkai)
+        run: |
+          mkdir -p _site/bingkai
+          cp -r app/src/main/assets/. _site/
+          cp -r bingkai/. _site/bingkai/
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: app/src/main/assets
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4

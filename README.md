@@ -2,6 +2,8 @@
 
 **Main di browser:** https://walinggaanggi-arch.github.io/kpukalbar-misi-pencoblosan/
 
+**Alat Bingkai Dokumentasi (frame + judul foto, kirim ke WhatsApp):** https://walinggaanggi-arch.github.io/kpukalbar-misi-pencoblosan/bingkai/
+
 **Unduh APK terbaru:** https://github.com/walinggaanggi-arch/kpukalbar-misi-pencoblosan/releases/latest/download/misi-pencoblosan.apk
 
 Proyek Android yang membungkus game **Misi Pencoblosan** (HTML5) menjadi aplikasi layar penuh dan terkunci landscape. Isi game ada di `app/src/main/assets/index.html`.
