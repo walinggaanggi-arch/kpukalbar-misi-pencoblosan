@@ -65,3 +65,5 @@ MEMAKAI FRAME SENDIRI
    judul ke bar tetap sama seperti frame bawaan (bisa diatur dengan slider "Jarak ke bar sosmed").
 3. Bagian yang tidak diunggah memakai frame bawaan. Frame milikmu tersimpan di perangkat ini.
 4. Kembali ke frame KPU dengan memilih "Frame KPU Kalbar (bawaan)", atau klik "Hapus frame saya".
+5. Bila frame tidak punya gradasi gelap di bagian bawah, aktifkan "Bayangan tipis pada teks"
+   supaya judul tetap terbaca di atas foto yang terang.
