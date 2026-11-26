@@ -652,6 +652,8 @@
     return new Blob([...parts, ...central, e.buffer], { type: 'application/zip' });
   }
 
+  if (/github\.io$/.test(location.hostname)) $('extLink').hidden = false;
+
   // ---------- mulai ----------
   (async () => {
     try {

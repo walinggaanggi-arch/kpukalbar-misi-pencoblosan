@@ -28,6 +28,11 @@ jobs:
           mkdir -p _site/bingkai
           cp -r app/src/main/assets/. _site/
           cp -r bingkai/. _site/bingkai/
+          # Paket ekstensi Chrome/Edge selalu sama dengan isi folder bingkai/
+          mkdir -p /tmp/ext
+          cp -r bingkai/. /tmp/ext/
+          cp -r bingkai-ekstensi/. /tmp/ext/
+          (cd /tmp/ext && zip -qr "$GITHUB_WORKSPACE/_site/bingkai/bingkai-dokumentasi-ekstensi.zip" .)
       - uses: actions/upload-pages-artifact@v4
         with:
           path: _site

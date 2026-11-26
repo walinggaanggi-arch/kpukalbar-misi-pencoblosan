@@ -1,0 +1,63 @@
+BINGKAI DOKUMENTASI KPU KALBAR - Ekstensi Google Chrome / Microsoft Edge
+
+UNDUH VERSI TERBARU
+https://walinggaanggi-arch.github.io/kpukalbar-misi-pencoblosan/bingkai/bingkai-dokumentasi-ekstensi.zip
+
+CARA MEMASANG
+1. Ekstrak file zip ini ke folder tetap, misalnya Documents\BingkaiDokumentasi.
+   Jangan hapus atau pindahkan folder ini setelah dipasang.
+2. Buka Chrome, ketik  chrome://extensions  di kolom alamat, lalu tekan Enter.
+   (Microsoft Edge: edge://extensions)
+3. Aktifkan "Developer mode" / "Mode pengembang" di pojok kanan atas.
+4. Klik "Load unpacked" / "Muat yang belum dikemas", lalu pilih folder hasil ekstrak
+   (folder yang berisi file manifest.json).
+5. Klik ikon puzzle di toolbar, lalu sematkan (pin) "Bingkai Dokumentasi KPU Kalbar".
+
+CARA MEMAKAI
+1. Klik ikon ekstensi. Alat terbuka di tab baru.
+2. Tambahkan foto (klik atau seret banyak foto sekaligus), berapa pun jumlahnya.
+   Foto 1 = frame utama + judul. Foto berikutnya = frame lanjutan.
+   Tambah foto lagi kapan saja dengan tombol "+ Tambah foto lanjutan" di bawah daftar.
+   Frame tiap foto bisa diganti dengan tombol "Frame utama" / "Frame lanjutan".
+3. Ketik judul kegiatan. Otomatis huruf kapital, Poppins Bold 67 pt.
+   Jarak judul ke bar sosmed bisa diatur dengan slider "Jarak ke bar sosmed".
+4. Seret foto di pratinjau untuk mengatur posisi, gunakan Zoom bila perlu.
+   Ubah urutan dengan menyeret foto di daftar ke posisi baru (garis emas = posisi tujuan),
+   (di layar sentuh: tekan lama lalu seret), atau dengan tombol "Geser urutan" /
+   "Jadikan foto pertama". Slide penutup selalu terakhir.
+5. Slide penutup (Follow Us + layanan PPID) otomatis ditambahkan sebagai gambar terakhir.
+   Matikan lewat centang "Sertakan slide penutup di akhir" bila tidak diperlukan.
+6. Klik "Unduh semua (ZIP)". Hasil 4000 x 2667 px.
+
+EDIT FOTO
+- Pilih foto, lalu atur Kecerahan, Kontras, Saturasi, Suhu warna, dan Luruskan di panel "Edit foto".
+- Putar kiri/kanan 90°, Cermin, Atur ulang edit.
+- "Samakan warna ke semua foto" menyalin pengaturan warna foto yang dipilih ke semua foto.
+
+SLIDE PENUTUP
+- Slide "Follow Us" otomatis ditambahkan di akhir ZIP dan saat dibagikan ke WhatsApp.
+- Matikan lewat centang "Sertakan slide penutup di akhir". Ganti gambarnya di bagian Frame,
+  atau timpa file penutup.jpg di folder ekstensi.
+
+POSTING KE MEDIA SOSIAL (panel "Posting ke media sosial")
+1. Isi "Keterangan kegiatan" (opsional). Caption tiap platform tersusun otomatis
+   dari judul + keterangan + tagar wajib KPU Kalbar, dan bisa diedit per platform.
+2. Pilih tab platform: WhatsApp, Instagram, Facebook, X, atau TikTok.
+   - X: caption otomatis dipendekkan maksimal 280 karakter, maksimal 4 foto.
+   - Instagram: maksimal 20 foto. TikTok: maksimal 35 foto.
+3. Di HP atau Windows: klik "Siapkan foto untuk dibagikan", lalu klik tombol yang sama
+   ("Bagikan N gambar ke ...") dan pilih aplikasinya. Caption otomatis tersalin;
+   tempel di kolom keterangan.
+4. Di laptop: klik "Buka ..." (WhatsApp Web, Meta Business Suite, X, TikTok Studio).
+   Caption otomatis tersalin (untuk X langsung terisi). Unggah foto dari ZIP, lalu tempel caption.
+5. "Salin foto ini" menyalin foto yang dipilih untuk ditempel (Ctrl+V) di WhatsApp Web.
+
+INFO SUDAH POSTING (pesan pemberitahuan ke grup)
+1. Setelah diposting, tempel tautan postingan Instagram, Facebook, X (dan TikTok/YouTube bila ada).
+2. Salam (Pagi/Siang/Sore/Malam) dan tanggal terisi otomatis; bisa diubah.
+   Judul otomatis berhuruf awal kapital (singkatan seperti KPU, JDIH tetap kapital); bisa diubah.
+3. Klik "Salin pesan" lalu tempel di grup, atau "Kirim ke WhatsApp" untuk memilih grup langsung.
+
+MENGGANTI FRAME UNTUK SELAMANYA
+Timpa file frame-utama.png, frame-lanjutan.png, dan/atau penutup.jpg di folder ini dengan nama yang sama,
+lalu di chrome://extensions klik tombol muat ulang (ikon panah melingkar) pada ekstensi.
