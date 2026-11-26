@@ -33,7 +33,7 @@ header .sp{flex:1}
 @media(max-width:1100px){.add2{width:150px;aspect-ratio:3/2}.count{align-self:center;width:90px}}
 .seg{display:inline-flex}.seg button{border-radius:0}.seg button:first-child{border-radius:8px 0 0 8px}.seg button:last-child{border-radius:0 8px 8px 0;margin-left:-1px}
 .seg button[aria-pressed=true]{background:var(--m);border-color:var(--m);color:#fff}
-.th .u2{background:#2d5f8a}
+.th .u2{background:#2d5f8a}.th .u3{background:#b8860b}.th.end{cursor:pointer;opacity:.95}
 .drop{border:2px dashed var(--line);border-radius:12px;padding:14px;text-align:center;color:var(--muted);font-size:13px;cursor:pointer;flex:none}
 .drop.on{border-color:var(--m);background:light-dark(#fbeeea,#2c1d1e)}
 .drop b{display:block;color:var(--ink);font-size:14px}
@@ -137,9 +137,11 @@ button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-vis
       <div class="frames">
         <figure><img id="f1img" alt="Frame utama"><figcaption>Utama</figcaption><button class="full" data-f="1" style="margin-top:4px;min-height:36px;font-size:12px">Ganti</button></figure>
         <figure><img id="f2img" alt="Frame lanjutan"><figcaption>Lanjutan</figcaption><button class="full" data-f="2" style="margin-top:4px;min-height:36px;font-size:12px">Ganti</button></figure>
+        <figure style="grid-column:1/-1"><img id="f3img" alt="Slide penutup"><figcaption>Slide penutup (paling akhir)</figcaption><button class="full" data-f="3" style="margin-top:4px;min-height:36px;font-size:12px">Ganti</button></figure>
       </div>
-      <input type="file" id="ffile" accept="image/png" hidden>
-      <p class="note">Gunakan PNG dengan bagian tengah transparan. Frame pengganti hanya berlaku sampai halaman ditutup.</p>
+      <label class="chk"><input type="checkbox" id="endOn" checked> Sertakan slide penutup di akhir</label>
+      <input type="file" id="ffile" accept="image/png,image/jpeg" hidden>
+      <p class="note">Frame: PNG dengan bagian tengah transparan. Slide penutup: gambar utuh (PNG/JPG) seukuran frame. Pengganti hanya berlaku sampai halaman ditutup.</p>
     </div>
   </aside>
 </div>

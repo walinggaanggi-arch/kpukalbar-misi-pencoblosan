@@ -6,7 +6,9 @@
   // Poppins Bold 67 pt (≈ 89 px), baris terakhir ber-baseline di y 2480, lebar maksimum ±3400 px, jarak baris 1,1×.
   const REF_W = 4000, BASE = 2480 / 2667, MAXW = 3400 / 4000, LH = 1.1;
 
-  const F = { 1: null, 2: null };
+  const F = { 1: null, 2: null, 3: null };
+  let viewEnd = false;
+  const endOn = () => !!F[3] && $('endOn').checked;
   const photos = [];
   let sel = 0, uid = 0;
   const cv = $('cv'), ctx = cv.getContext('2d');
@@ -91,11 +93,14 @@
     const ok = photos.length > 0;
     ['zipBtn', 'oneBtn', 'reset', 'left', 'right', 'first', 'del', 'zoom', 'shareBtn', 'copyImg'].forEach(id => $(id).disabled = !ok);
     if (!ok) shareReady = null;
+    syncFrameBtns();
     if (!ok) {
       ctx.clearRect(0, 0, W, H);
       if (F[1]) { ctx.globalAlpha = .9; ctx.drawImage(F[1], 0, 0, W, H); ctx.globalAlpha = 1; drawTitle(ctx, W, H); }
       return;
     }
+    if (viewEnd && endOn()) { ctx.drawImage(F[3], 0, 0, W, H); return; }
+    viewEnd = false;
     const p = photos[sel];
     $('zoom').value = p.zoom;
     compose(ctx, W, H, p, p.prev, sel);
@@ -123,18 +128,29 @@
       n.className = 'n ' + (fu ? 'u' : 'u2');
       n.textContent = `${i + 1} · ${fu ? 'Utama' : 'Lanjutan'}`;
       d.append(n);
-      d.onclick = () => { sel = i; renderList(); render(); };
+      d.onclick = () => { sel = i; viewEnd = false; renderList(); render(); };
       d.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); d.click(); } };
       list.insertBefore(d, $('count'));
       thumb(i);
     });
+    if (photos.length && endOn()) {
+      const d = document.createElement('div'), c = document.createElement('canvas'), [FW, FH] = frameSize();
+      d.className = 'th end' + (viewEnd ? ' sel' : ''); d.tabIndex = 0; d.setAttribute('role', 'button'); d.setAttribute('aria-label', 'Slide penutup');
+      c.width = 300; c.height = Math.round(300 * FH / FW); c.getContext('2d').drawImage(F[3], 0, 0, c.width, c.height);
+      const n = document.createElement('span'); n.className = 'n u3'; n.textContent = `${photos.length + 1} · Penutup`;
+      d.append(c, n);
+      d.onclick = () => { viewEnd = true; renderList(); render(); };
+      d.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); d.click(); } };
+      list.insertBefore(d, $('count'));
+    }
     const nu = photos.filter((p, i) => frameOf(p, i) === 1).length;
-    $('count').textContent = photos.length ? `${photos.length} foto · ${nu} utama + ${photos.length - nu} lanjutan` : '';
+    $('count').textContent = photos.length ? `${photos.length} foto · ${nu} utama + ${photos.length - nu} lanjutan${endOn() ? ' + penutup' : ''}` : '';
     $('addMore').hidden = !photos.length;
     syncFrameBtns();
   }
   function syncFrameBtns() {
-    const ok = photos.length > 0, f = ok ? frameOf(photos[sel], sel) : 0;
+    ['reset', 'left', 'right', 'first', 'del', 'zoom'].forEach(id => $(id).disabled = !photos.length || viewEnd);
+    const ok = photos.length > 0 && !viewEnd, f = ok ? frameOf(photos[sel], sel) : 0;
     $('fr1').setAttribute('aria-pressed', f === 1); $('fr2').setAttribute('aria-pressed', f === 2);
     $('fr1').disabled = $('fr2').disabled = !ok;
   }
@@ -202,6 +218,7 @@
   };
 
   ['title', 'size', 'weight', 'shadow', 'allTitle'].forEach(id => $(id).addEventListener('input', refreshSoon));
+  $('endOn').addEventListener('input', () => { if (!$('endOn').checked) viewEnd = false; renderList(); render(); });
 
   // ---------- frame ----------
   let fSlot = 1;
@@ -215,7 +232,8 @@
       F[fSlot] = await loadImg(url);
       $('f' + fSlot + 'img').src = url;
       refreshSoon();
-      msg(`Frame ${fSlot === 1 ? 'utama' : 'lanjutan'} diganti.`);
+      renderList();
+      msg(fSlot === 3 ? 'Slide penutup diganti.' : `Frame ${fSlot === 1 ? 'utama' : 'lanjutan'} diganti.`);
     } catch (e) { msg('File frame tidak bisa dibaca.'); }
   };
 
@@ -258,12 +276,24 @@
     return { blob, name: `${pad(i + 1)}-${slug($('title').value)}.${png ? 'png' : 'jpg'}` };
   }
 
+  async function exportEnd(n, fmt, maxW) {
+    const [FW, FH] = frameSize();
+    const W = maxW && maxW < FW ? maxW : FW, H = Math.round(W * FH / FW);
+    work.width = W; work.height = H;
+    const c = work.getContext('2d');
+    c.imageSmoothingQuality = 'high';
+    c.drawImage(F[3], 0, 0, W, H);
+    const png = (fmt || $('fmt').value) === 'png';
+    const blob = await new Promise(r => work.toBlob(r, png ? 'image/png' : 'image/jpeg', +$('q').value));
+    return { blob, name: `${pad(n)}-penutup.${png ? 'png' : 'jpg'}` };
+  }
+
   const prog = v => { const p = $('prog'); p.classList.toggle('on', v !== null); p.firstElementChild.style.width = (v || 0) * 100 + '%'; };
   const busy = on => ['zipBtn', 'oneBtn'].forEach(id => $(id).disabled = on || !photos.length);
 
   $('oneBtn').onclick = async () => {
     busy(true); msg('Menyiapkan foto...');
-    try { const f = await exportOne(sel); if (await save(f.blob, f.name)) msg(`${f.name} siap diunduh.`); }
+    try { const f = viewEnd ? await exportEnd(photos.length + 1) : await exportOne(sel); if (await save(f.blob, f.name)) msg(`${f.name} siap diunduh.`); }
     catch (e) { msg('Gagal membuat foto: ' + e.message); }
     busy(false);
   };
@@ -271,10 +301,12 @@
     busy(true); prog(0);
     try {
       const out = [];
-      for (let i = 0; i < photos.length; i++) { msg(`Memproses foto ${i + 1} dari ${photos.length}...`); out.push(await exportOne(i)); prog((i + 1) / photos.length); }
+      const tot = photos.length + (endOn() ? 1 : 0);
+      for (let i = 0; i < photos.length; i++) { msg(`Memproses foto ${i + 1} dari ${tot}...`); out.push(await exportOne(i)); prog((i + 1) / tot); }
+      if (endOn()) { out.push(await exportEnd(photos.length + 1)); prog(1); }
       msg('Membuat ZIP...');
       const z = await zip(out), name = `${slug($('title').value)}.zip`;
-      if (await save(z, name)) msg(`${photos.length} foto dalam ${name} (${(z.size / 1048576).toFixed(1)} MB).`);
+      if (await save(z, name)) msg(`${out.length} gambar dalam ${name} (${(z.size / 1048576).toFixed(1)} MB).`);
     } catch (e) { msg('Gagal membuat ZIP: ' + e.message); }
     prog(null); busy(false);
   };
@@ -298,7 +330,7 @@
   function setShareLabel() {
     const b = $('shareBtn');
     if (!canShareFiles) { b.textContent = 'Bagikan (buka versi ekstensi atau situs web)'; b.disabled = true; return; }
-    b.textContent = shareReady ? `Bagikan ${shareReady.length} foto ke WhatsApp` : 'Siapkan untuk WhatsApp';
+    b.textContent = shareReady ? `Bagikan ${shareReady.length} gambar ke WhatsApp` : 'Siapkan untuk WhatsApp';
   }
   if (!canShareFiles) { waMsg(inClaude ? 'Tombol Bagikan tidak tersedia di dalam claude.ai. Gunakan situs web atau ekstensi untuk berbagi langsung. Salin foto dan caption tetap bisa dipakai.' : 'Perangkat ini tidak mendukung berbagi file langsung. Gunakan Salin foto + Salin caption, atau Unduh semua.'); }
   setShareLabel();
@@ -314,6 +346,7 @@
           const f = await exportOne(i, 'jpg');
           files.push(new File([f.blob], f.name, { type: 'image/jpeg' }));
         }
+        if (endOn()) { const f = await exportEnd(photos.length + 1, 'jpg'); files.push(new File([f.blob], f.name, { type: 'image/jpeg' })); }
         shareReady = files;
         waMsg('Siap. Tekan tombol hijau sekali lagi, lalu pilih WhatsApp dan grupnya.');
       } catch (e) { waMsg('Gagal menyiapkan foto: ' + e.message); }
@@ -333,7 +366,7 @@
     if (!photos.length) return;
     try {
       const blobP = (async () => {
-        const f = await exportOne(sel, 'png', 2400);
+        const f = viewEnd ? await exportEnd(photos.length + 1, 'png', 2400) : await exportOne(sel, 'png', 2400);
         return f.blob;
       })();
       waMsg('Menyalin foto...');
@@ -380,6 +413,7 @@
       [F[1], F[2]] = await Promise.all([loadImg('frame-utama.png'), loadImg('frame-lanjutan.png')]);
       $('f1img').src = F[1].src; $('f2img').src = F[2].src;
     } catch (e) { msg('Frame bawaan tidak termuat. Gunakan tombol Ganti untuk memilih file frame.'); }
+    try { F[3] = await loadImg('penutup.jpg'); $('f3img').src = F[3].src; } catch (e) { $('endOn').checked = false; }
     render();
     try { await document.fonts.load('700 90px Poppins'); await document.fonts.load('500 90px Poppins'); } catch (e) { }
     if (!document.fonts.check('700 20px Poppins')) msg('Huruf Poppins belum termuat. Judul sementara memakai huruf cadangan.');
