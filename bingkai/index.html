@@ -41,6 +41,14 @@ a.btn{display:flex;align-items:center;justify-content:center;text-decoration:non
 .links{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;align-items:center;margin-top:10px;font-size:13px}
 .links label{font-weight:600}
 input[type=url],input[type=date]{width:100%;font:500 14px Poppins,system-ui,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:40px}
+.th{touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.th:not(.end){cursor:grab}
+.th.dragging{opacity:.3}
+.th.drop-b{box-shadow:0 -5px 0 0 var(--gold)}.th.drop-a{box-shadow:0 5px 0 0 var(--gold)}
+.list.horiz .th.drop-b{box-shadow:-5px 0 0 0 var(--gold)}.list.horiz .th.drop-a{box-shadow:5px 0 0 0 var(--gold)}
+.ghost{position:fixed;z-index:50;pointer-events:none;width:140px;border:3px solid var(--gold);border-radius:10px;overflow:hidden;box-shadow:0 10px 30px #0006;transform:translate(-50%,-50%) rotate(-3deg)}
+.ghost canvas{display:block;width:100%}
+body.dragging-photo{cursor:grabbing}
 .count{font-size:12px;color:var(--muted);text-align:center;flex:none}
 .add2{flex:none;border-style:dashed;color:var(--m)}
 @media(max-width:1100px){.add2{width:150px;aspect-ratio:3/2}.count{align-self:center;width:90px}}
@@ -92,7 +100,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-vis
 </header>
 <div class="wrap">
   <section class="list" id="list" aria-label="Daftar foto">
-    <div class="drop" id="drop" tabindex="0" role="button"><b>+ Tambah foto</b>Klik atau seret foto ke sini. Bisa banyak sekaligus.</div>
+    <div class="drop" id="drop" tabindex="0" role="button"><b>+ Tambah foto</b>Klik atau seret foto ke sini. Bisa banyak sekaligus. Seret foto di daftar untuk mengubah urutan.</div>
     <div class="count" id="count"></div>
     <input type="file" id="file" accept="image/*" multiple hidden>
     <button class="add2" id="addMore" hidden>+ Tambah foto lanjutan</button>

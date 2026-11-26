@@ -170,7 +170,10 @@
       n.className = 'n ' + (fu ? 'u' : 'u2');
       n.textContent = `${i + 1} · ${fu ? 'Utama' : 'Lanjutan'}`;
       d.append(n);
-      d.onclick = () => { sel = i; viewEnd = false; renderList(); render(); };
+      d.onclick = () => { if (justDragged) return; sel = i; viewEnd = false; renderList(); render(); };
+      d.dataset.idx = i;
+      d.addEventListener('pointerdown', e => dragStart(e, i, d));
+      d.addEventListener('contextmenu', e => e.preventDefault());
       d.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); d.click(); } };
       list.insertBefore(d, $('count'));
       thumb(i);
@@ -200,6 +203,74 @@
   $('fr1').onclick = () => setFrame(1);
   $('fr2').onclick = () => setFrame(2);
   $('addMore').onclick = () => $('file').click();
+
+  // ---------- seret untuk mengubah urutan ----------
+  let dragS = null, justDragged = false;
+  const photoThumbs = () => [...$('list').querySelectorAll('.th:not(.end)')];
+  function dragStart(e, i, el) {
+    if (e.button > 0) return;
+    dragS = { i, el, x: e.clientX, y: e.clientY, id: e.pointerId, touch: e.pointerType !== 'mouse', active: false, timer: 0, k: -1 };
+    if (dragS.touch) dragS.timer = setTimeout(() => { if (dragS && !dragS.active) activate(dragS.x, dragS.y); }, 350);
+  }
+  function activate(x, y) {
+    const ths = photoThumbs();
+    dragS.active = true;
+    dragS.horiz = ths.length > 1 && Math.abs(ths[1].getBoundingClientRect().top - ths[0].getBoundingClientRect().top) < 10;
+    $('list').classList.toggle('horiz', dragS.horiz);
+    dragS.el.classList.add('dragging');
+    document.body.classList.add('dragging-photo');
+    const g = document.createElement('div'), c = document.createElement('canvas'), src = photos[dragS.i].tc;
+    g.className = 'ghost'; c.width = src.width; c.height = src.height; c.getContext('2d').drawImage(src, 0, 0);
+    g.append(c); document.body.append(g); dragS.ghost = g;
+    if (navigator.vibrate) try { navigator.vibrate(15); } catch (e) { }
+    dragMove(x, y);
+  }
+  function dragMove(x, y) {
+    const g = dragS.ghost; g.style.left = x + 'px'; g.style.top = y + 'px';
+    const ths = photoThumbs(), pos = dragS.horiz ? x : y;
+    let k = 0;
+    ths.forEach(t => { const r = t.getBoundingClientRect(); if ((dragS.horiz ? r.left + r.width / 2 : r.top + r.height / 2) < pos) k++; });
+    dragS.k = k;
+    ths.forEach(t => t.classList.remove('drop-b', 'drop-a'));
+    const to = k > dragS.i ? k - 1 : k;
+    if (to !== dragS.i) { if (k < ths.length) ths[k].classList.add('drop-b'); else ths[ths.length - 1].classList.add('drop-a'); }
+    const L = $('list'), r = L.getBoundingClientRect(), edge = 48, sp = 14;
+    if (dragS.horiz) { if (x < r.left + edge) L.scrollLeft -= sp; else if (x > r.right - edge) L.scrollLeft += sp; }
+    else { if (y < r.top + edge) L.scrollTop -= sp; else if (y > r.bottom - edge) L.scrollTop += sp; }
+  }
+  function dragEnd(commit) {
+    if (!dragS) return;
+    clearTimeout(dragS.timer);
+    const d = dragS; dragS = null;
+    if (!d.active) return;
+    d.ghost.remove();
+    document.body.classList.remove('dragging-photo');
+    photoThumbs().forEach(t => t.classList.remove('drop-b', 'drop-a', 'dragging'));
+    justDragged = true; setTimeout(() => { justDragged = false; }, 50);
+    if (!commit || d.k < 0) return;
+    const to = d.k > d.i ? d.k - 1 : d.k;
+    if (to === d.i) return;
+    const selP = photos[sel], [p] = photos.splice(d.i, 1);
+    photos.splice(to, 0, p);
+    sel = Math.max(0, photos.indexOf(selP));
+    renderList(); render();
+    msg(`Foto dipindah ke urutan ${to + 1}.`);
+  }
+  document.addEventListener('pointermove', e => {
+    if (!dragS || e.pointerId !== dragS.id) return;
+    const dist = Math.hypot(e.clientX - dragS.x, e.clientY - dragS.y);
+    if (!dragS.active) {
+      if (dragS.touch) { if (dist > 10) { clearTimeout(dragS.timer); dragS = null; } return; }
+      if (dist < 6) return;
+      activate(e.clientX, e.clientY);
+      return;
+    }
+    dragMove(e.clientX, e.clientY);
+  });
+  document.addEventListener('pointerup', e => { if (dragS && e.pointerId === dragS.id) dragEnd(true); });
+  document.addEventListener('pointercancel', e => { if (dragS && e.pointerId === dragS.id) dragEnd(false); });
+  document.addEventListener('touchmove', e => { if (dragS && dragS.active) e.preventDefault(); }, { passive: false });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && dragS) dragEnd(false); });
 
   let tT = 0;
   const refreshSoon = () => { shareReady = null; if (typeof setShareLabel === 'function') setShareLabel(); render(); clearTimeout(tT); tT = setTimeout(() => photos.forEach((_, i) => thumb(i)), 150); };
