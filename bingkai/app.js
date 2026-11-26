@@ -7,6 +7,7 @@
   const REF_W = 4000, BASE = 2480 / 2667, MAXW = 3400 / 4000, LH = 1.1;
 
   const F = { 1: null, 2: null, 3: null };
+  const ED0 = () => ({ b: 0, c: 0, s: 0, w: 0, st: 0, rot: 0, flip: false });
   let viewEnd = false;
   const endOn = () => !!F[3] && $('endOn').checked;
   const photos = [];
@@ -70,6 +71,46 @@
     c.restore();
   }
 
+  // ---------- edit foto ----------
+  const hasColor = ed => !!(ed.b || ed.c || ed.s || ed.w);
+  const hasEdit = ed => hasColor(ed) || !!ed.st || !!(ed.rot % 360) || !!ed.flip;
+  function colorAdj(x, w, h, ed) {
+    const d = x.getImageData(0, 0, w, h), a = d.data;
+    const cc = ed.c * 1.28, cf = (259 * (cc + 255)) / (255 * (259 - cc)), lut = new Uint8ClampedArray(256);
+    for (let i = 0; i < 256; i++) { let v = i * (1 + ed.b / 200) + ed.b * 0.5; v = cf * (v - 128) + 128; lut[i] = v; }
+    const sat = 1 + ed.s / 100, wr = ed.w * 0.35;
+    for (let i = 0; i < a.length; i += 4) {
+      let r = lut[a[i]], g = lut[a[i + 1]], b = lut[a[i + 2]];
+      if (sat !== 1) { const y = 0.299 * r + 0.587 * g + 0.114 * b; r = y + (r - y) * sat; g = y + (g - y) * sat; b = y + (b - y) * sat; }
+      if (wr) { r += wr; b -= wr; }
+      a[i] = r; a[i + 1] = g; a[i + 2] = b;
+    }
+    x.putImageData(d, 0, 0);
+  }
+  // Putar 90°, cermin, luruskan (dengan zoom otomatis agar sudut tidak kosong), lalu warna.
+  function applyEdits(src, ed) {
+    if (!ed || !hasEdit(ed)) return src;
+    const r = ((ed.rot % 360) + 360) % 360, sw = src.width, sh = src.height, swap = r === 90 || r === 270;
+    const w = swap ? sh : sw, h = swap ? sw : sh;
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d');
+    x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+    x.translate(w / 2, h / 2);
+    const th = ed.st * Math.PI / 180;
+    if (th) { const a = Math.abs(th), k = Math.max(Math.cos(a) + (h / w) * Math.sin(a), Math.cos(a) + (w / h) * Math.sin(a)); x.rotate(th); x.scale(k, k); }
+    if (ed.flip) x.scale(-1, 1);
+    x.rotate(r * Math.PI / 180);
+    x.drawImage(src, -sw / 2, -sh / 2);
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    if (hasColor(ed)) colorAdj(x, w, h, ed);
+    return c;
+  }
+  function procPrev(p) {
+    const key = JSON.stringify(p.ed);
+    if (p.procKey !== key) { p.proc = applyEdits(p.prev, p.ed); p.procKey = key; }
+    return p.proc;
+  }
+
   const frameOf = (p, idx) => p.frame || (idx === 0 ? 1 : 2);
 
   function compose(c, W, H, p, img, idx) {
@@ -94,22 +135,23 @@
     ['zipBtn', 'oneBtn', 'reset', 'left', 'right', 'first', 'del', 'zoom', 'shareBtn', 'copyImg'].forEach(id => $(id).disabled = !ok);
     if (!ok) shareReady = null;
     syncFrameBtns();
+    syncEdit();
     if (!ok) {
       ctx.clearRect(0, 0, W, H);
       if (F[1]) { ctx.globalAlpha = .9; ctx.drawImage(F[1], 0, 0, W, H); ctx.globalAlpha = 1; drawTitle(ctx, W, H); }
       return;
     }
-    if (viewEnd && endOn()) { ctx.drawImage(F[3], 0, 0, W, H); return; }
+    if (viewEnd && endOn()) { ctx.drawImage(F[3], 0, 0, W, H); syncEdit(); return; }
     viewEnd = false;
     const p = photos[sel];
     $('zoom').value = p.zoom;
-    compose(ctx, W, H, p, p.prev, sel);
+    compose(ctx, W, H, p, procPrev(p), sel);
   }
 
   function thumb(i) {
     const p = photos[i], c = p.tc, [FW, FH] = frameSize();
     c.width = 300; c.height = Math.round(300 * FH / FW);
-    compose(c.getContext('2d'), c.width, c.height, p, p.prev, i);
+    compose(c.getContext('2d'), c.width, c.height, p, procPrev(p), i);
   }
 
   function renderList() {
@@ -170,7 +212,7 @@
     for (const f of imgs) {
       try {
         const prev = await decode(f, 1800);
-        photos.push({ id: ++uid, file: f, prev, zoom: 1, ox: 0, oy: 0, tc: document.createElement('canvas') });
+        photos.push({ id: ++uid, file: f, prev, zoom: 1, ox: 0, oy: 0, ed: ED0(), tc: document.createElement('canvas') });
       } catch (e) { msg(`Foto ${f.name} tidak bisa dibaca.`); }
     }
     if (photos.length && sel >= photos.length) sel = 0;
@@ -220,6 +262,27 @@
   ['title', 'size', 'weight', 'shadow', 'allTitle'].forEach(id => $(id).addEventListener('input', refreshSoon));
   $('endOn').addEventListener('input', () => { if (!$('endOn').checked) viewEnd = false; renderList(); render(); });
 
+  // ---------- panel edit ----------
+  const EDS = [['eB', 'b', 'oB', ''], ['eC', 'c', 'oC', ''], ['eS', 's', 'oS', ''], ['eW', 'w', 'oW', ''], ['eT', 'st', 'oT', '°']];
+  const fmtV = (v, u) => (v > 0 ? '+' : '') + v + u;
+  function syncEdit() {
+    const ok = photos.length > 0 && !viewEnd, ed = ok ? photos[sel].ed : ED0();
+    EDS.forEach(([id, k, o, u]) => { $(id).value = ed[k]; $(o).textContent = fmtV(ed[k], u); $(id).disabled = !ok; });
+    ['rotL', 'rotR', 'flip', 'edReset', 'edAll'].forEach(id => $(id).disabled = !ok);
+    $('flip').setAttribute('aria-pressed', String(!!ed.flip));
+  }
+  let eT = 0;
+  const edChanged = () => { clearTimeout(eT); eT = setTimeout(refreshSoon, 30); };
+  EDS.forEach(([id, k, o, u]) => {
+    $(id).addEventListener('input', e => { if (!photos.length || viewEnd) return; photos[sel].ed[k] = +e.target.value; $(o).textContent = fmtV(+e.target.value, u); edChanged(); });
+    $(id).addEventListener('dblclick', () => { if (!photos.length || viewEnd) return; photos[sel].ed[k] = 0; edChanged(); });
+  });
+  $('rotL').onclick = () => { const p = photos[sel]; p.ed.rot = (p.ed.rot + 270) % 360; p.ox = p.oy = 0; refreshSoon(); };
+  $('rotR').onclick = () => { const p = photos[sel]; p.ed.rot = (p.ed.rot + 90) % 360; p.ox = p.oy = 0; refreshSoon(); };
+  $('flip').onclick = () => { const p = photos[sel]; p.ed.flip = !p.ed.flip; refreshSoon(); };
+  $('edReset').onclick = () => { photos[sel].ed = ED0(); refreshSoon(); };
+  $('edAll').onclick = () => { const e = photos[sel].ed; photos.forEach(p => { p.ed = { ...p.ed, b: e.b, c: e.c, s: e.s, w: e.w }; }); refreshSoon(); msg(`Warna foto ${sel + 1} diterapkan ke ${photos.length} foto.`); };
+
   // ---------- frame ----------
   let fSlot = 1;
   document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { fSlot = +b.dataset.f; $('ffile').click(); });
@@ -268,8 +331,8 @@
     const [FW, FH] = frameSize();
     const W = maxW && maxW < FW ? maxW : FW, H = Math.round(W * FH / FW);
     work.width = W; work.height = H;
-    const p = photos[i], full = await decode(p.file, maxW ? Math.max(W * 1.5, 2400) : 0);
-    compose(work.getContext('2d'), W, H, p, full, i);
+    const p = photos[i], full = await decode(p.file, maxW ? Math.max(W * 1.5, 2400) : 4800), img = applyEdits(full, p.ed);
+    compose(work.getContext('2d'), W, H, p, img, i);
     if (full.close) full.close();
     const png = (fmt || $('fmt').value) === 'png';
     const blob = await new Promise(r => work.toBlob(r, png ? 'image/png' : 'image/jpeg', +$('q').value));

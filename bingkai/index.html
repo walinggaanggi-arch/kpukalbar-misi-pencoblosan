@@ -28,6 +28,10 @@ header .sp{flex:1}
 @media(prefers-color-scheme:dark){.card h2{color:#f0b5a8}}:root[data-theme=dark] .card h2{color:#f0b5a8}:root[data-theme=light] .card h2{color:var(--m)}
 .list{display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 110px);overflow:auto;position:sticky;top:12px}
 @media(max-width:1100px){.list{flex-direction:row;overflow-x:auto;max-height:none;position:static}}
+.sl{display:grid;grid-template-columns:auto minmax(0,1fr) 48px;gap:6px 12px;align-items:center;font-size:13px}
+.sl label{font-weight:600}.sl output{font-variant-numeric:tabular-nums;text-align:right;color:var(--muted)}
+.sl input{accent-color:var(--m);width:100%;min-height:28px}
+#flip[aria-pressed=true]{background:var(--m);border-color:var(--m);color:#fff}
 .count{font-size:12px;color:var(--muted);text-align:center;flex:none}
 .add2{flex:none;border-style:dashed;color:var(--m)}
 @media(max-width:1100px){.add2{width:150px;aspect-ratio:3/2}.count{align-self:center;width:90px}}
@@ -95,6 +99,24 @@ button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-vis
       <span class="seg" role="group" aria-label="Frame foto ini"><button id="fr1" aria-pressed="false">Frame utama</button><button id="fr2" aria-pressed="false">Frame lanjutan</button></span>
       <button id="first">Jadikan foto pertama</button>
       <button id="del">Hapus</button>
+    </div>
+    <div class="card" id="editCard">
+      <h2>Edit foto</h2>
+      <div class="sl">
+        <label for="eB">Kecerahan</label><input type="range" id="eB" min="-100" max="100" step="1" value="0"><output id="oB">0</output>
+        <label for="eC">Kontras</label><input type="range" id="eC" min="-100" max="100" step="1" value="0"><output id="oC">0</output>
+        <label for="eS">Saturasi</label><input type="range" id="eS" min="-100" max="100" step="1" value="0"><output id="oS">0</output>
+        <label for="eW">Suhu warna</label><input type="range" id="eW" min="-100" max="100" step="1" value="0"><output id="oW">0</output>
+        <label for="eT">Luruskan</label><input type="range" id="eT" min="-15" max="15" step="0.5" value="0"><output id="oT">0°</output>
+      </div>
+      <div class="tools" style="margin-top:10px">
+        <button id="rotL" title="Putar 90° ke kiri">⟲ Putar kiri</button>
+        <button id="rotR" title="Putar 90° ke kanan">⟳ Putar kanan</button>
+        <button id="flip" title="Cerminkan foto" aria-pressed="false">⇋ Cermin</button>
+        <button id="edReset">Atur ulang edit</button>
+        <button id="edAll" title="Samakan kecerahan, kontras, saturasi, dan suhu warna ke semua foto">Samakan warna ke semua foto</button>
+      </div>
+      <p class="note">Suhu warna: geser ke kiri lebih kebiruan, ke kanan lebih hangat. Klik dua kali pada slider untuk kembali ke 0.</p>
     </div>
     <p class="note">Seret foto di pratinjau untuk mengatur bagian yang tampil. Pratinjau ditampilkan lebih kecil; hasil unduhan memakai resolusi penuh frame (4000 × 2667 px).</p>
   </section>
