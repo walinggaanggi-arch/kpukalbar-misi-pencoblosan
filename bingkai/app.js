@@ -370,7 +370,22 @@
       const frac = y => { let n = 0; for (let i = x0; i < x1; i++) if (d[(y * w + i) * 4 + 3] >= 230) n++; return n / (x1 - x0); };
       let y = h - 2;
       if (frac(y) < .6) { img._bar = null; }
-      else { while (y > h * .5 && frac(y) >= .6) y--; img._bar = (y + 1) / h; }
+      else {
+        while (y > h * .5 && frac(y) >= .6) y--;
+        img._bar = (y + 1) / h;
+        // Perhalus di resolusi penuh (±2 baris kasar)
+        try {
+          const NW = img.naturalWidth, NH = img.naturalHeight, sx = Math.round(NW * .38), sw = Math.round(NW * .24);
+          const y0 = Math.max(0, Math.floor(img._bar * NH - 2 * NH / h)), y1 = Math.min(NH, Math.ceil(img._bar * NH + 2 * NH / h)), sh = y1 - y0;
+          const c2 = document.createElement('canvas'); c2.width = sw; c2.height = sh;
+          const x2 = c2.getContext('2d'); x2.drawImage(img, sx, y0, sw, sh, 0, 0, sw, sh);
+          const d2 = x2.getImageData(0, 0, sw, sh).data;
+          const f2 = r => { let n = 0; for (let i = 0; i < sw; i++) if (d2[(r * sw + i) * 4 + 3] >= 230) n++; return n / sw; };
+          let r = sh - 1;
+          while (r > 0 && f2(r) >= .6) r--;
+          if (f2(sh - 1) >= .6) img._bar = (y0 + r + 1) / NH;
+        } catch (e) { }
+      }
       const cy = Math.round(h * .45), cx = Math.round(w * .5); img._opaqueCenter = d[(cy * w + cx) * 4 + 3] > 200;
     } catch (e) { img._bar = null; }
     return img._bar;
@@ -669,25 +684,23 @@
   }
   const cleanUrl = u => { u = u.trim(); if (!u) return ''; if (!$('iClean').checked) return u; try { const x = new URL(u); x.search = ''; x.hash = ''; return x.toString(); } catch (e) { return u.split('?')[0]; } };
   const LINKS = [['lIG', 'Instagram'], ['lFB', 'Facebook'], ['lX', 'X'], ['lTT', 'TikTok'], ['lYT', 'YouTube']];
-  let iTitleEdited = false, iMsgEdited = false;
+  let iMsgEdited = false;
   function buildInfo() {
     const salam = $('iSalam').value === 'auto' ? salamAuto(new Date()) : $('iSalam').value;
-    const judul = $('iTitle').value.trim() || 'Judul Kegiatan';
+    const judul = titleCase($('title').value.toUpperCase()) || 'Judul Kegiatan';
     const links = LINKS.map(([id, n]) => [n, cleanUrl($(id).value)]).filter(([, u]) => u);
     const ls = links.length ? links.map(([n, u]) => `*${n}*\n${u}`).join('\n\n') : '*Instagram*\n(tempel tautan)\n\n*Facebook*\n(tempel tautan)\n\n*X*\n(tempel tautan)';
     return `Selamat *${salam}*\nYth Bapak/Ibu\nSalam HUMAS\n\nMohon ijin membagikan postingan dari Medsos KPU Provinsi Kalimantan Barat *${tglText($('iDate').value)}.*\n\n*${judul}*\n\nCek postingan berikut….\n\n${ls}\n\nJangan lupa like, komen, dan share juga ya Bapak/Ibu ♥️\nTerimakasih🙏\n\n#KPUMelayani\n#Berakhlak\n#BanggaMelayaniBangsa\n#BalakEEE`;
   }
   function renderInfo() {
-    if (!iTitleEdited) $('iTitle').value = titleCase($('title').value);
     if (!iMsgEdited) $('iMsg').value = buildInfo();
     $('iWa').href = 'https://wa.me/?text=' + encodeURIComponent($('iMsg').value);
   }
   (() => { const d = new Date(), z = n => String(n).padStart(2, '0'); $('iDate').value = `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`; })();
   $('title').addEventListener('input', renderInfo);
-  $('iTitle').addEventListener('input', () => { iTitleEdited = $('iTitle').value.trim() !== ''; renderInfo(); });
   ['iSalam', 'iDate', 'iClean', ...LINKS.map(l => l[0])].forEach(id => $(id).addEventListener('input', renderInfo));
   $('iMsg').addEventListener('input', () => { iMsgEdited = true; $('iWa').href = 'https://wa.me/?text=' + encodeURIComponent($('iMsg').value); });
-  $('iReset').onclick = () => { iTitleEdited = false; iMsgEdited = false; renderInfo(); $('iInfo').textContent = 'Pesan disusun ulang.'; };
+  $('iReset').onclick = () => { iMsgEdited = false; renderInfo(); $('iInfo').textContent = 'Pesan disusun ulang.'; };
   $('iCopy').onclick = async () => { renderInfo(); if (await copyText($('iMsg').value)) $('iInfo').textContent = 'Pesan tersalin. Tempel di grup WhatsApp.'; else { $('iMsg').select(); $('iInfo').textContent = 'Pesan sudah dipilih; tekan Ctrl+C.'; } };
   $('iWa').addEventListener('click', () => { $('iInfo').textContent = 'Membuka WhatsApp. Pilih grup, lalu kirim.'; });
   setInterval(() => { if ($('iSalam').value === 'auto' && !iMsgEdited) renderInfo(); }, 60000);
