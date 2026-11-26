@@ -1,5 +1,7 @@
 # Misi Pencoblosan untuk Android
 
+**Unduh APK terbaru:** https://github.com/walinggaanggi-arch/kpukalbar-misi-pencoblosan/releases/latest/download/misi-pencoblosan.apk
+
 Proyek Android yang membungkus game **Misi Pencoblosan** (HTML5) menjadi aplikasi layar penuh dan terkunci landscape. Isi game ada di `app/src/main/assets/index.html`.
 
 - Android 7.0 ke atas (minSdk 24), target Android 16 (API 36) sesuai syarat Google Play.
@@ -35,9 +37,9 @@ Proyek Android yang membungkus game **Misi Pencoblosan** (HTML5) menjadi aplikas
 
 ## Cara 2: Dibangunkan otomatis oleh GitHub (tanpa memasang apa pun)
 
-1. Buat repositori baru di GitHub, lalu unggah seluruh isi folder `MisiPencoblosan`, termasuk folder `.github` yang tersembunyi.
-2. Buka tab **Actions**, pilih **Build APK**, lalu klik **Run workflow**.
-3. Setelah ±5 menit, buka hasil run tersebut dan unduh **misi-pencoblosan-debug-apk** di bagian *Artifacts*. Di dalamnya ada file `.apk` siap pasang.
+Repositori ini sudah diatur: setiap ada perubahan di cabang `main` (misalnya `app/src/main/assets/index.html` diganti), GitHub otomatis membangun APK baru dan menerbitkannya di halaman **Releases**. Tautan unduhan di atas selalu mengarah ke versi terbaru.
+
+Untuk membangun ulang tanpa mengubah file: buka tab **Actions**, pilih **Build APK**, lalu klik **Run workflow**.
 
 APK dari cara ini adalah versi debug, cocok untuk uji coba dan dibagikan terbatas. Untuk rilis resmi atau Play Store, gunakan Cara 1.
 
