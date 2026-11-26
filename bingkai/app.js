@@ -3,8 +3,9 @@
   const $ = id => document.getElementById(id);
 
   // Tata letak judul, diukur dari contoh resmi (frame 4000 × 2667 px):
-  // Poppins Bold 67 pt (≈ 89 px), baris terakhir ber-baseline di y 2480, lebar maksimum ±3400 px, jarak baris 1,1×.
-  const REF_W = 4000, BASE = 2480 / 2667, MAXW = 3400 / 4000, LH = 1.1;
+  // Poppins Bold 67 pt (≈ 89 px), lebar maksimum ±3400 px, jarak baris 1,1×.
+  // Bar media sosial pada frame utama mulai di y 2545; baseline baris terakhir = 2545 − jarak (bawaan 105 px).
+  const REF_W = 4000, BAR_Y = 2545 / 2667, MAXW = 3400 / 4000, LH = 1.1;
 
   const F = { 1: null, 2: null, 3: null };
   const ED0 = () => ({ b: 0, c: 0, s: 0, w: 0, st: 0, rot: 0, flip: false });
@@ -66,7 +67,7 @@
     c.textBaseline = 'alphabetic';
     c.fillStyle = '#ffffff';
     if ($('shadow').checked) { c.shadowColor = 'rgba(0,0,0,.45)'; c.shadowBlur = 10 * k; c.shadowOffsetY = 4 * k; }
-    const ls = wrap(c, t, MAXW * W), lh = px * LH, base = BASE * H;
+    const gap = (+$('gap').value || 0) * (W / REF_W), ls = wrap(c, t, MAXW * W), lh = px * LH, base = BAR_Y * H - gap;
     ls.forEach((ln, i) => c.fillText(ln, W / 2, base - (ls.length - 1 - i) * lh));
     c.restore();
   }
@@ -330,7 +331,8 @@
     renderList(); render();
   };
 
-  ['title', 'size', 'weight', 'shadow', 'allTitle'].forEach(id => $(id).addEventListener('input', refreshSoon));
+  ['title', 'size', 'weight', 'shadow', 'allTitle', 'gap'].forEach(id => $(id).addEventListener('input', refreshSoon));
+  $('gap').addEventListener('input', () => { $('gapV').textContent = $('gap').value + ' px'; });
   $('endOn').addEventListener('input', () => { if (!$('endOn').checked) viewEnd = false; renderList(); render(); });
 
   // ---------- panel edit ----------
@@ -498,7 +500,7 @@
   $('cap').addEventListener('input', () => { edited[cur] = $('cap').value; updCount(); });
   $('capReset').onclick = () => { delete edited[cur]; renderPf(); waMsg(`Caption ${PF[cur].n} disusun ulang dari judul dan keterangan.`); };
   ['title', 'desc'].forEach(id => $(id).addEventListener('input', () => { if (edited[cur] == null) { $('cap').value = buildCap(cur); updCount(); } }));
-  ['size', 'weight', 'shadow', 'allTitle', 'fmt', 'q'].forEach(id => $(id).addEventListener('input', () => { shareReady = null; setShareLabel(); }));
+  ['size', 'weight', 'shadow', 'allTitle', 'gap', 'fmt', 'q'].forEach(id => $(id).addEventListener('input', () => { shareReady = null; setShareLabel(); }));
 
   const inClaude = !!(window.claude && window.claude.use);
   const canShareFiles = (() => { try { return !inClaude && !!navigator.canShare && navigator.canShare({ files: [new File([new Blob(['x'], { type: 'image/jpeg' })], 'a.jpg', { type: 'image/jpeg' })] }); } catch (e) { return false; } })();
