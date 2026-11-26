@@ -58,6 +58,10 @@ INFO SUDAH POSTING (pesan pemberitahuan ke grup)
    Judul otomatis berhuruf awal kapital (singkatan seperti KPU, JDIH tetap kapital); bisa diubah.
 3. Klik "Salin pesan" lalu tempel di grup, atau "Kirim ke WhatsApp" untuk memilih grup langsung.
 
-MENGGANTI FRAME UNTUK SELAMANYA
-Timpa file frame-utama.png, frame-lanjutan.png, dan/atau penutup.jpg di folder ini dengan nama yang sama,
-lalu di chrome://extensions klik tombol muat ulang (ikon panah melingkar) pada ekstensi.
+MEMAKAI FRAME SENDIRI
+1. Di bagian Frame, pilih "Frame saya", lalu klik Unggah pada Utama, Lanjutan, dan/atau Slide penutup.
+   Frame: PNG dengan bagian tengah transparan; ukuran bebas (disarankan 4000 x 2667 px).
+2. Posisi bar media sosial di bagian bawah frame utama terdeteksi otomatis, sehingga jarak
+   judul ke bar tetap sama seperti frame bawaan (bisa diatur dengan slider "Jarak ke bar sosmed").
+3. Bagian yang tidak diunggah memakai frame bawaan. Frame milikmu tersimpan di perangkat ini.
+4. Kembali ke frame KPU dengan memilih "Frame KPU Kalbar (bawaan)", atau klik "Hapus frame saya".

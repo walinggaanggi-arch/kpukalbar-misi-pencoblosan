@@ -6,6 +6,8 @@
   // Poppins Bold 67 pt (≈ 89 px), lebar maksimum ±3400 px, jarak baris 1,1×.
   // Bar media sosial pada frame utama mulai di y 2545; baseline baris terakhir = 2545 − jarak (bawaan 105 px).
   const REF_W = 4000, BAR_Y = 2545 / 2667, MAXW = 3400 / 4000, LH = 1.1;
+  const DEF = { 1: null, 2: null, 3: null }, CUS = { 1: null, 2: null, 3: null }, CUSB = { 1: null, 2: null, 3: null };
+  let fmode = 'kpu';
 
   const F = { 1: null, 2: null, 3: null };
   const ED0 = () => ({ b: 0, c: 0, s: 0, w: 0, st: 0, rot: 0, flip: false });
@@ -57,7 +59,7 @@
     return out;
   }
 
-  function drawTitle(c, W, H) {
+  function drawTitle(c, W, H, fr) {
     const t = $('title').value.trim();
     if (!t) return;
     const k = W / REF_W, px = (+$('size').value || 67) * 4 / 3 * k;
@@ -67,7 +69,7 @@
     c.textBaseline = 'alphabetic';
     c.fillStyle = '#ffffff';
     if ($('shadow').checked) { c.shadowColor = 'rgba(0,0,0,.45)'; c.shadowBlur = 10 * k; c.shadowOffsetY = 4 * k; }
-    const gap = (+$('gap').value || 0) * (W / REF_W), ls = wrap(c, t, MAXW * W), lh = px * LH, base = BAR_Y * H - gap;
+    const gap = (+$('gap').value || 0) * (W / REF_W), ls = wrap(c, t, MAXW * W), lh = px * LH, base = barOf(fr) * H - gap;
     ls.forEach((ln, i) => c.fillText(ln, W / 2, base - (ls.length - 1 - i) * lh));
     c.restore();
   }
@@ -123,7 +125,7 @@
     c.drawImage(img, x, y, dw, dh);
     const fn = frameOf(p, idx), fr = F[fn];
     if (fr) c.drawImage(fr, 0, 0, W, H);
-    if (fn === 1 || $('allTitle').checked) drawTitle(c, W, H);
+    if (fn === 1 || $('allTitle').checked) drawTitle(c, W, H, fr);
   }
 
   // ---------- pratinjau ----------
@@ -139,7 +141,7 @@
     syncEdit();
     if (!ok) {
       ctx.clearRect(0, 0, W, H);
-      if (F[1]) { ctx.globalAlpha = .9; ctx.drawImage(F[1], 0, 0, W, H); ctx.globalAlpha = 1; drawTitle(ctx, W, H); }
+      if (F[1]) { ctx.globalAlpha = .9; ctx.drawImage(F[1], 0, 0, W, H); ctx.globalAlpha = 1; drawTitle(ctx, W, H, F[1]); }
       return;
     }
     if (viewEnd && endOn()) { ctx.drawImage(F[3], 0, 0, W, H); syncEdit(); return; }
@@ -357,6 +359,55 @@
   $('edAll').onclick = () => { const e = photos[sel].ed; photos.forEach(p => { p.ed = { ...p.ed, b: e.b, c: e.c, s: e.s, w: e.w }; }); refreshSoon(); msg(`Warna foto ${sel + 1} diterapkan ke ${photos.length} foto.`); };
 
   // ---------- frame ----------
+  // Deteksi batas atas bar media sosial: dari bawah ke atas, baris yang buram (alpha tinggi) di bagian tengah frame.
+  function detectBar(img) {
+    if (!img || img._bar !== undefined) return img ? img._bar : null;
+    try {
+      const w = 500, h = Math.max(1, Math.round(w * img.naturalHeight / img.naturalWidth));
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const x = c.getContext('2d'); x.drawImage(img, 0, 0, w, h);
+      const d = x.getImageData(0, 0, w, h).data, x0 = Math.round(w * .38), x1 = Math.round(w * .62);
+      const frac = y => { let n = 0; for (let i = x0; i < x1; i++) if (d[(y * w + i) * 4 + 3] >= 230) n++; return n / (x1 - x0); };
+      let y = h - 2;
+      if (frac(y) < .6) { img._bar = null; }
+      else { while (y > h * .5 && frac(y) >= .6) y--; img._bar = (y + 1) / h; }
+      const cy = Math.round(h * .45), cx = Math.round(w * .5); img._opaqueCenter = d[(cy * w + cx) * 4 + 3] > 200;
+    } catch (e) { img._bar = null; }
+    return img._bar;
+  }
+  function barOf(fr) {
+    const f = fr || F[1];
+    if (!f) return BAR_Y;
+    const b = detectBar(f);
+    return b == null ? 0.97 : b;
+  }
+  function applyFrames() {
+    [1, 2, 3].forEach(n => {
+      F[n] = (fmode === 'saya' && CUS[n]) || DEF[n];
+      const im = $('f' + n + 'img');
+      if (F[n]) im.src = F[n].src;
+      im.parentElement.classList.toggle('cus', fmode === 'saya' && !!CUS[n]);
+    });
+    document.querySelectorAll('input[name=fmode]').forEach(r => r.checked = r.value === fmode);
+    $('fClear').hidden = !(CUS[1] || CUS[2] || CUS[3]);
+    const b = detectBar(F[1]), H = F[1] ? F[1].naturalHeight : 2667;
+    $('barInfo').textContent = F[1] ? (b == null ? 'Bar media sosial tidak terdeteksi pada frame utama; judul ditempatkan dari tepi bawah gambar.' : `Bar media sosial frame utama terdeteksi di y ${Math.round(b * H)} dari ${H} px.`) : '';
+    if (!$('endOn').dataset.user) $('endOn').checked = !!F[3];
+    shareReady = null; setShareLabel();
+    renderList(); refreshSoon();
+  }
+  // Penyimpanan frame saya (IndexedDB, hanya di perangkat ini)
+  const idb = () => new Promise((res, rej) => { try { const r = indexedDB.open('bingkai-dokumentasi', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } });
+  async function idbSet(k, v) { try { const db = await idb(); await new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); }); } catch (e) { } }
+  async function idbGet(k) { try { const db = await idb(); return await new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); } catch (e) { return undefined; } }
+  const saveFrames = () => idbSet('frames', { mode: fmode, 1: CUSB[1], 2: CUSB[2], 3: CUSB[3] });
+  async function loadFrames() {
+    const v = await idbGet('frames');
+    if (!v) return;
+    for (const n of [1, 2, 3]) if (v[n] instanceof Blob) { try { CUSB[n] = v[n]; CUS[n] = await loadImg(URL.createObjectURL(v[n])); } catch (e) { } }
+    if (v.mode === 'saya' && (CUS[1] || CUS[2] || CUS[3])) fmode = 'saya';
+  }
+  const fMsg = t => { $('fMsg').textContent = t; };
   let fSlot = 1;
   document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { fSlot = +b.dataset.f; $('ffile').click(); });
   $('ffile').onchange = async () => {
@@ -364,14 +415,32 @@
     $('ffile').value = '';
     if (!f) return;
     try {
-      const url = URL.createObjectURL(f);
-      F[fSlot] = await loadImg(url);
-      $('f' + fSlot + 'img').src = url;
-      refreshSoon();
-      renderList();
-      msg(fSlot === 3 ? 'Slide penutup diganti.' : `Frame ${fSlot === 1 ? 'utama' : 'lanjutan'} diganti.`);
-    } catch (e) { msg('File frame tidak bisa dibaca.'); }
+      const img = await loadImg(URL.createObjectURL(f));
+      CUS[fSlot] = img; CUSB[fSlot] = f; fmode = 'saya';
+      applyFrames(); saveFrames();
+      const nm = fSlot === 3 ? 'Slide penutup' : `Frame ${fSlot === 1 ? 'utama' : 'lanjutan'}`;
+      let note = '';
+      if (fSlot !== 3) {
+        detectBar(img);
+        if (img._opaqueCenter) note += ' Perhatian: bagian tengah frame tidak transparan, foto akan tertutup.';
+        const [FW, FH] = frameSize();
+        if (Math.abs(img.naturalWidth / img.naturalHeight - FW / FH) > 0.02) note += ` Rasio frame berbeda dengan frame utama (${FW}×${FH}); frame akan direntangkan.`;
+        if (fSlot === 1) note += img._bar == null ? ' Bar media sosial tidak terdeteksi; judul ditempatkan dari tepi bawah.' : ` Bar terdeteksi di y ${Math.round(img._bar * img.naturalHeight)} px; jarak judul ke bar tetap sama (menyesuaikan ukuran frame).`;
+      }
+      fMsg(`${nm} milikmu dipakai dan disimpan di perangkat ini.${note}`);
+    } catch (e) { fMsg('File tidak bisa dibaca. Gunakan PNG atau JPG.'); }
   };
+  document.querySelectorAll('input[name=fmode]').forEach(r => r.addEventListener('change', () => {
+    fmode = r.value;
+    if (fmode === 'saya' && !(CUS[1] || CUS[2] || CUS[3])) fMsg('Belum ada frame milikmu. Klik Unggah pada Utama, Lanjutan, atau Slide penutup.');
+    else fMsg(fmode === 'saya' ? 'Memakai frame milikmu.' : 'Memakai frame KPU Kalbar bawaan.');
+    applyFrames(); saveFrames();
+  }));
+  $('fClear').onclick = () => {
+    CUS[1] = CUS[2] = CUS[3] = null; CUSB[1] = CUSB[2] = CUSB[3] = null; fmode = 'kpu';
+    applyFrames(); saveFrames(); fMsg('Frame milikmu dihapus. Kembali ke frame KPU Kalbar bawaan.');
+  };
+  $('endOn').addEventListener('change', () => { $('endOn').dataset.user = '1'; });
 
   // ---------- unduh ----------
   const msg = t => { $('msg').textContent = t; };
@@ -657,10 +726,11 @@
   // ---------- mulai ----------
   (async () => {
     try {
-      [F[1], F[2]] = await Promise.all([loadImg('frame-utama.png'), loadImg('frame-lanjutan.png')]);
-      $('f1img').src = F[1].src; $('f2img').src = F[2].src;
-    } catch (e) { msg('Frame bawaan tidak termuat. Gunakan tombol Ganti untuk memilih file frame.'); }
-    try { F[3] = await loadImg('penutup.jpg'); $('f3img').src = F[3].src; } catch (e) { $('endOn').checked = false; }
+      [DEF[1], DEF[2]] = await Promise.all([loadImg('frame-utama.png'), loadImg('frame-lanjutan.png')]);
+    } catch (e) { msg('Frame bawaan tidak termuat. Gunakan pilihan Frame saya untuk mengunggah frame.'); }
+    try { DEF[3] = await loadImg('penutup.jpg'); } catch (e) { }
+    await loadFrames();
+    applyFrames();
     render();
     try { await document.fonts.load('700 90px Poppins'); await document.fonts.load('500 90px Poppins'); } catch (e) { }
     if (!document.fonts.check('700 20px Poppins')) msg('Huruf Poppins belum termuat. Judul sementara memakai huruf cadangan.');

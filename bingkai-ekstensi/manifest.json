@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Bingkai Dokumentasi KPU Kalbar",
-  "version": "1.8",
+  "version": "1.9",
   "description": "Pasang frame KPU Provinsi Kalimantan Barat dan judul kegiatan ke foto dokumentasi, lalu unduh sekaligus dalam ZIP.",
   "action": {
     "default_title": "Bingkai Dokumentasi",

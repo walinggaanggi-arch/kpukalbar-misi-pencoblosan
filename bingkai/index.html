@@ -49,6 +49,11 @@ input[type=url],input[type=date]{width:100%;font:500 14px Poppins,system-ui,sans
 .ghost{position:fixed;z-index:50;pointer-events:none;width:140px;border:3px solid var(--gold);border-radius:10px;overflow:hidden;box-shadow:0 10px 30px #0006;transform:translate(-50%,-50%) rotate(-3deg)}
 .ghost canvas{display:block;width:100%}
 body.dragging-photo{cursor:grabbing}
+.fmode{display:grid;gap:6px;margin-bottom:10px;font-size:13px;font-weight:600}
+.fmode label{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer}
+.fmode input{accent-color:var(--m);width:18px;height:18px}
+.fmode label:has(input:checked){border-color:var(--m);background:light-dark(#fbeeea,#2c1d1e)}
+.frames figure.cus figcaption::after{content:" · milikmu";color:var(--m);font-weight:700}
 .count{font-size:12px;color:var(--muted);text-align:center;flex:none}
 .add2{flex:none;border-style:dashed;color:var(--m)}
 @media(max-width:1100px){.add2{width:150px;aspect-ratio:3/2}.count{align-self:center;width:90px}}
@@ -204,16 +209,23 @@ button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-vis
       <button class="full" id="iReset" style="margin-top:8px;min-height:36px;font-size:12px">Susun ulang pesan otomatis</button>
       <div class="msg" id="iInfo" role="status"></div>
     </div>
-    <div class="card" style="margin-top:12px">
+    <div class="card" style="margin-top:12px" id="frameCard">
       <h2>Frame</h2>
-      <div class="frames">
-        <figure><img id="f1img" alt="Frame utama"><figcaption>Utama</figcaption><button class="full" data-f="1" style="margin-top:4px;min-height:36px;font-size:12px">Ganti</button></figure>
-        <figure><img id="f2img" alt="Frame lanjutan"><figcaption>Lanjutan</figcaption><button class="full" data-f="2" style="margin-top:4px;min-height:36px;font-size:12px">Ganti</button></figure>
-        <figure style="grid-column:1/-1"><img id="f3img" alt="Slide penutup"><figcaption>Slide penutup (paling akhir)</figcaption><button class="full" data-f="3" style="margin-top:4px;min-height:36px;font-size:12px">Ganti</button></figure>
+      <div class="fmode" role="radiogroup" aria-label="Pilihan frame">
+        <label><input type="radio" name="fmode" value="kpu" checked> Frame KPU Kalbar (bawaan)</label>
+        <label><input type="radio" name="fmode" value="saya"> Frame saya</label>
       </div>
+      <div class="frames">
+        <figure><img id="f1img" alt="Frame utama"><figcaption>Utama</figcaption><button class="full" data-f="1" style="margin-top:4px;min-height:36px;font-size:12px">Unggah</button></figure>
+        <figure><img id="f2img" alt="Frame lanjutan"><figcaption>Lanjutan</figcaption><button class="full" data-f="2" style="margin-top:4px;min-height:36px;font-size:12px">Unggah</button></figure>
+        <figure style="grid-column:1/-1"><img id="f3img" alt="Slide penutup"><figcaption>Slide penutup (paling akhir)</figcaption><button class="full" data-f="3" style="margin-top:4px;min-height:36px;font-size:12px">Unggah</button></figure>
+      </div>
+      <p class="note" id="barInfo"></p>
       <label class="chk"><input type="checkbox" id="endOn" checked> Sertakan slide penutup di akhir</label>
-      <input type="file" id="ffile" accept="image/png,image/jpeg" hidden>
-      <p class="note">Frame: PNG dengan bagian tengah transparan. Slide penutup: gambar utuh (PNG/JPG) seukuran frame. Pengganti hanya berlaku sampai halaman ditutup.</p>
+      <input type="file" id="ffile" accept="image/png,image/jpeg,image/webp" hidden>
+      <button class="full" id="fClear" style="margin-top:8px;min-height:36px;font-size:12px" hidden>Hapus frame saya</button>
+      <p class="note">Frame: PNG dengan bagian tengah transparan; ukuran bebas (disarankan 4000 × 2667 px). Posisi bar media sosial di bawah frame terdeteksi otomatis, jadi jarak judul ke bar tetap sama. Bagian yang tidak diunggah memakai frame bawaan. Frame saya tersimpan di perangkat ini.</p>
+      <div class="msg" id="fMsg" role="status"></div>
     </div>
   </aside>
 </div>
