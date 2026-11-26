@@ -38,6 +38,9 @@ header .sp{flex:1}
 .caphead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .cnt{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}.cnt.over{color:#c0392b;font-weight:700}
 a.btn{display:flex;align-items:center;justify-content:center;text-decoration:none;box-sizing:border-box}
+.links{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;align-items:center;margin-top:10px;font-size:13px}
+.links label{font-weight:600}
+input[type=url],input[type=date]{width:100%;font:500 14px Poppins,system-ui,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:40px}
 .count{font-size:12px;color:var(--muted);text-align:center;flex:none}
 .add2{flex:none;border-style:dashed;color:var(--m)}
 @media(max-width:1100px){.add2{width:150px;aspect-ratio:3/2}.count{align-self:center;width:90px}}
@@ -165,6 +168,30 @@ button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-vis
       <div class="row2" style="margin-top:8px"><button id="copyCap">Salin caption</button><button id="copyImg" disabled>Salin foto ini</button></div>
       <button class="full" id="capReset" style="margin-top:8px;min-height:36px;font-size:12px">Susun ulang caption otomatis</button>
       <div class="msg" id="waMsg" role="status"></div>
+    </div>
+    <div class="card" style="margin-top:12px" id="infoCard">
+      <h2>Info sudah posting</h2>
+      <p class="note" style="margin:0 0 6px">Setelah diposting, tempel tautannya di sini untuk membuat pesan pemberitahuan ke grup.</p>
+      <div class="row2">
+        <div><label class="l" for="iSalam">Salam</label><select id="iSalam"><option value="auto">Otomatis</option><option>Pagi</option><option>Siang</option><option>Sore</option><option>Malam</option></select></div>
+        <div><label class="l" for="iDate">Tanggal posting</label><input type="date" id="iDate"></div>
+      </div>
+      <label class="l" for="iTitle">Judul kegiatan di pesan</label>
+      <textarea id="iTitle" style="text-transform:none;min-height:88px;font-size:14px" aria-label="Judul kegiatan di pesan"></textarea>
+      <p class="note">Otomatis dari judul foto dengan huruf awal kapital. Boleh diubah.</p>
+      <div class="links">
+        <label for="lIG">Instagram</label><input type="url" id="lIG" placeholder="https://www.instagram.com/p/...">
+        <label for="lFB">Facebook</label><input type="url" id="lFB" placeholder="https://www.facebook.com/share/p/...">
+        <label for="lX">X</label><input type="url" id="lX" placeholder="https://x.com/kpukalbarprov/status/...">
+        <label for="lTT">TikTok</label><input type="url" id="lTT" placeholder="(opsional)">
+        <label for="lYT">YouTube</label><input type="url" id="lYT" placeholder="(opsional)">
+      </div>
+      <label class="chk"><input type="checkbox" id="iClean" checked> Rapikan tautan (hapus kode pelacak setelah tanda ?)</label>
+      <label class="l" for="iMsg">Pesan</label>
+      <textarea id="iMsg" style="text-transform:none;min-height:260px;font-weight:500;font-size:13px" aria-label="Pesan pemberitahuan"></textarea>
+      <div class="row2" style="margin-top:8px"><button class="p" id="iCopy">Salin pesan</button><a class="btn" id="iWa" target="_blank" rel="noopener" style="background:#1f8f4e;border-color:#1f8f4e;color:#fff">Kirim ke WhatsApp</a></div>
+      <button class="full" id="iReset" style="margin-top:8px;min-height:36px;font-size:12px">Susun ulang pesan otomatis</button>
+      <div class="msg" id="iInfo" role="status"></div>
     </div>
     <div class="card" style="margin-top:12px">
       <h2>Frame</h2>

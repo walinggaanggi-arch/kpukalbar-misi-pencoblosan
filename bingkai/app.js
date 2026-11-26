@@ -496,6 +496,61 @@
   };
   renderPf();
 
+  // ---------- info sudah posting ----------
+  const HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  const KECIL = new Set(['dan', 'di', 'ke', 'dari', 'yang', 'untuk', 'pada', 'dengan', 'atau', 'serta', 'dalam', 'oleh', 'bagi', 'tentang', 'terhadap', 'sebagai', 'antara', 'atas', 'melalui']);
+  const KEEP_UP = new Set(['KPU', 'RI', 'JDIH', 'PPID', 'DPT', 'DPTB', 'DPK', 'DPS', 'KPPS', 'PPK', 'PPS', 'TPS', 'PPDP', 'DPR', 'DPRD', 'DPD', 'PKPU', 'SK', 'SDM', 'TIK', 'IT', 'ASN', 'PNS', 'PPPK', 'BPS', 'OPD', 'LHKPN', 'SIPOL', 'SILON', 'SIREKAP', 'SIDALIH', 'SAKIP', 'LAKIP', 'RKA', 'DIPA', 'BMN', 'SPIP', 'ZI', 'WBK', 'WBBM', 'HUT', 'UU', 'PP', 'TNI', 'POLRI', 'POLDA', 'POLRES', 'DKPP', 'MK', 'MA', 'PTUN', 'KIP', 'SMA', 'SMK', 'SMP', 'SD', 'MAN', 'UIN', 'IAIN', 'OSIS', 'BEM', 'UKM', 'RT', 'RW', 'LSM', 'NGO', 'FGD']);
+  const ROMAWI = /^(?=[IVXLC]+$)M*(C[MD]|D?C{0,3})(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})$/;
+  function capWord(w, first) {
+    const m = w.match(/^([^A-Za-z0-9]*)([A-Za-z0-9]+)(.*)$/);
+    if (!m) return w;
+    const [, pre, core, post] = m, up = core.toUpperCase();
+    const inParen = pre.includes('(') && /\)/.test(post) && /^[A-Z]{2,8}$/.test(up);
+    if (KEEP_UP.has(up) || inParen || /\d/.test(core) && /[A-Z]/i.test(core) && core.length <= 6 || (ROMAWI.test(up) && up.length <= 4 && up !== 'DI' && up !== 'MI')) return pre + up + post.replace(/[A-Za-z]+/g, t => capWord(t, false));
+    const low = core.toLowerCase();
+    if (!first && KECIL.has(low)) return pre + low + post;
+    if (!first && low === 'se' && post.startsWith('-')) return pre + 'se' + post.replace(/([\/\-])([A-Za-z]+)/g, (_, sep, t) => sep + capWord(t, false));
+    const out = low.charAt(0).toUpperCase() + low.slice(1);
+    return pre + out + post.replace(/([\/\-])([A-Za-z]+)/g, (_, sep, t) => sep + capWord(t, false));
+  }
+  function titleCase(t) {
+    t = t.trim().replace(/\s+/g, ' ');
+    if (!t) return '';
+    if (t !== t.toUpperCase()) return t;
+    return t.split(' ').map((w, i) => capWord(w, i === 0)).join(' ');
+  }
+  function salamAuto(d) { const h = d.getHours(); return h < 11 ? 'Pagi' : h < 15 ? 'Siang' : h < 18 ? 'Sore' : 'Malam'; }
+  function tglText(v) {
+    const d = v ? new Date(v + 'T12:00:00') : new Date();
+    return `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`;
+  }
+  const cleanUrl = u => { u = u.trim(); if (!u) return ''; if (!$('iClean').checked) return u; try { const x = new URL(u); x.search = ''; x.hash = ''; return x.toString(); } catch (e) { return u.split('?')[0]; } };
+  const LINKS = [['lIG', 'Instagram'], ['lFB', 'Facebook'], ['lX', 'X'], ['lTT', 'TikTok'], ['lYT', 'YouTube']];
+  let iTitleEdited = false, iMsgEdited = false;
+  function buildInfo() {
+    const salam = $('iSalam').value === 'auto' ? salamAuto(new Date()) : $('iSalam').value;
+    const judul = $('iTitle').value.trim() || 'Judul Kegiatan';
+    const links = LINKS.map(([id, n]) => [n, cleanUrl($(id).value)]).filter(([, u]) => u);
+    const ls = links.length ? links.map(([n, u]) => `*${n}*\n${u}`).join('\n\n') : '*Instagram*\n(tempel tautan)\n\n*Facebook*\n(tempel tautan)\n\n*X*\n(tempel tautan)';
+    return `Selamat *${salam}*\nYth Bapak/Ibu\nSalam HUMAS\n\nMohon ijin membagikan postingan dari Medsos KPU Provinsi Kalimantan Barat *${tglText($('iDate').value)}.*\n\n*${judul}*\n\nCek postingan berikut….\n\n${ls}\n\nJangan lupa like, komen, dan share juga ya Bapak/Ibu ♥️\nTerimakasih🙏\n\n#KPUMelayani\n#Berakhlak\n#BanggaMelayaniBangsa\n#BalakEEE`;
+  }
+  function renderInfo() {
+    if (!iTitleEdited) $('iTitle').value = titleCase($('title').value);
+    if (!iMsgEdited) $('iMsg').value = buildInfo();
+    $('iWa').href = 'https://wa.me/?text=' + encodeURIComponent($('iMsg').value);
+  }
+  (() => { const d = new Date(), z = n => String(n).padStart(2, '0'); $('iDate').value = `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`; })();
+  $('title').addEventListener('input', renderInfo);
+  $('iTitle').addEventListener('input', () => { iTitleEdited = $('iTitle').value.trim() !== ''; renderInfo(); });
+  ['iSalam', 'iDate', 'iClean', ...LINKS.map(l => l[0])].forEach(id => $(id).addEventListener('input', renderInfo));
+  $('iMsg').addEventListener('input', () => { iMsgEdited = true; $('iWa').href = 'https://wa.me/?text=' + encodeURIComponent($('iMsg').value); });
+  $('iReset').onclick = () => { iTitleEdited = false; iMsgEdited = false; renderInfo(); $('iInfo').textContent = 'Pesan disusun ulang.'; };
+  $('iCopy').onclick = async () => { renderInfo(); if (await copyText($('iMsg').value)) $('iInfo').textContent = 'Pesan tersalin. Tempel di grup WhatsApp.'; else { $('iMsg').select(); $('iInfo').textContent = 'Pesan sudah dipilih; tekan Ctrl+C.'; } };
+  $('iWa').addEventListener('click', () => { $('iInfo').textContent = 'Membuka WhatsApp. Pilih grup, lalu kirim.'; });
+  setInterval(() => { if ($('iSalam').value === 'auto' && !iMsgEdited) renderInfo(); }, 60000);
+  renderInfo();
+
   // ZIP sederhana (tanpa kompresi; JPG/PNG sudah terkompresi)
   const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
   const crc32 = u => { let c = 0xFFFFFFFF; for (let i = 0; i < u.length; i++) c = CRC[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
