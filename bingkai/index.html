@@ -28,6 +28,12 @@ header .sp{flex:1}
 @media(prefers-color-scheme:dark){.card h2{color:#f0b5a8}}:root[data-theme=dark] .card h2{color:#f0b5a8}:root[data-theme=light] .card h2{color:var(--m)}
 .list{display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 110px);overflow:auto;position:sticky;top:12px}
 @media(max-width:1100px){.list{flex-direction:row;overflow-x:auto;max-height:none;position:static}}
+.count{font-size:12px;color:var(--muted);text-align:center;flex:none}
+.add2{flex:none;border-style:dashed;color:var(--m)}
+@media(max-width:1100px){.add2{width:150px;aspect-ratio:3/2}.count{align-self:center;width:90px}}
+.seg{display:inline-flex}.seg button{border-radius:0}.seg button:first-child{border-radius:8px 0 0 8px}.seg button:last-child{border-radius:0 8px 8px 0;margin-left:-1px}
+.seg button[aria-pressed=true]{background:var(--m);border-color:var(--m);color:#fff}
+.th .u2{background:#2d5f8a}
 .drop{border:2px dashed var(--line);border-radius:12px;padding:14px;text-align:center;color:var(--muted);font-size:13px;cursor:pointer;flex:none}
 .drop.on{border-color:var(--m);background:light-dark(#fbeeea,#2c1d1e)}
 .drop b{display:block;color:var(--ink);font-size:14px}
@@ -74,17 +80,20 @@ button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-vis
 <div class="wrap">
   <section class="list" id="list" aria-label="Daftar foto">
     <div class="drop" id="drop" tabindex="0" role="button"><b>+ Tambah foto</b>Klik atau seret foto ke sini. Bisa banyak sekaligus.</div>
+    <div class="count" id="count"></div>
     <input type="file" id="file" accept="image/*" multiple hidden>
+    <button class="add2" id="addMore" hidden>+ Tambah foto lanjutan</button>
   </section>
 
   <section class="stage">
-    <div class="view" id="view"><canvas id="cv" width="1200" height="800" aria-label="Pratinjau foto berbingkai"></canvas><div class="empty" id="empty"><div><b>Belum ada foto</b><br>Tambahkan foto dokumentasi. Foto pertama memakai frame utama dan judul kegiatan, foto berikutnya memakai frame lanjutan.</div></div></div>
+    <div class="view" id="view"><canvas id="cv" width="1200" height="800" aria-label="Pratinjau foto berbingkai"></canvas><div class="empty" id="empty"><div><b>Belum ada foto</b><br>Tambahkan foto dokumentasi, berapa pun jumlahnya. Foto pertama memakai frame utama dan judul kegiatan, foto berikutnya memakai frame lanjutan. Frame tiap foto bisa diganti.</div></div></div>
     <div class="tools">
       <div class="grow"><span style="font-size:13px">Zoom</span><input type="range" id="zoom" min="1" max="3" step="0.01" value="1" aria-label="Zoom foto"></div>
       <button id="reset" title="Kembalikan posisi dan zoom">Atur ulang posisi</button>
       <button id="left" title="Pindah ke urutan sebelumnya">◀ Geser urutan</button>
       <button id="right" title="Pindah ke urutan berikutnya">Geser urutan ▶</button>
-      <button id="first">Jadikan foto utama</button>
+      <span class="seg" role="group" aria-label="Frame foto ini"><button id="fr1" aria-pressed="false">Frame utama</button><button id="fr2" aria-pressed="false">Frame lanjutan</button></span>
+      <button id="first">Jadikan foto pertama</button>
       <button id="del">Hapus</button>
     </div>
     <p class="note">Seret foto di pratinjau untuk mengatur bagian yang tampil. Pratinjau ditampilkan lebih kecil; hasil unduhan memakai resolusi penuh frame (4000 × 2667 px).</p>

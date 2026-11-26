@@ -68,6 +68,8 @@
     c.restore();
   }
 
+  const frameOf = (p, idx) => p.frame || (idx === 0 ? 1 : 2);
+
   function compose(c, W, H, p, img, idx) {
     c.fillStyle = '#000';
     c.fillRect(0, 0, W, H);
@@ -75,9 +77,9 @@
     c.imageSmoothingEnabled = true;
     c.imageSmoothingQuality = 'high';
     c.drawImage(img, x, y, dw, dh);
-    const fr = idx === 0 ? F[1] : F[2];
+    const fn = frameOf(p, idx), fr = F[fn];
     if (fr) c.drawImage(fr, 0, 0, W, H);
-    if (idx === 0 || $('allTitle').checked) drawTitle(c, W, H);
+    if (fn === 1 || $('allTitle').checked) drawTitle(c, W, H);
   }
 
   // ---------- pratinjau ----------
@@ -114,18 +116,32 @@
       d.className = 'th' + (i === sel ? ' sel' : '');
       d.tabIndex = 0;
       d.setAttribute('role', 'button');
-      d.setAttribute('aria-label', `Foto ${i + 1}${i === 0 ? ' (utama)' : ''}`);
+      const fu = frameOf(p, i) === 1;
+      d.setAttribute('aria-label', `Foto ${i + 1}, frame ${fu ? 'utama' : 'lanjutan'}`);
       d.append(p.tc);
       const n = document.createElement('span');
-      n.className = 'n' + (i === 0 ? ' u' : '');
-      n.textContent = i === 0 ? '1 · Utama' : String(i + 1);
+      n.className = 'n ' + (fu ? 'u' : 'u2');
+      n.textContent = `${i + 1} · ${fu ? 'Utama' : 'Lanjutan'}`;
       d.append(n);
       d.onclick = () => { sel = i; renderList(); render(); };
       d.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); d.click(); } };
-      list.append(d);
+      list.insertBefore(d, $('count'));
       thumb(i);
     });
+    const nu = photos.filter((p, i) => frameOf(p, i) === 1).length;
+    $('count').textContent = photos.length ? `${photos.length} foto · ${nu} utama + ${photos.length - nu} lanjutan` : '';
+    $('addMore').hidden = !photos.length;
+    syncFrameBtns();
   }
+  function syncFrameBtns() {
+    const ok = photos.length > 0, f = ok ? frameOf(photos[sel], sel) : 0;
+    $('fr1').setAttribute('aria-pressed', f === 1); $('fr2').setAttribute('aria-pressed', f === 2);
+    $('fr1').disabled = $('fr2').disabled = !ok;
+  }
+  const setFrame = n => { if (!photos.length) return; photos[sel].frame = n; renderList(); render(); };
+  $('fr1').onclick = () => setFrame(1);
+  $('fr2').onclick = () => setFrame(2);
+  $('addMore').onclick = () => $('file').click();
 
   let tT = 0;
   const refreshSoon = () => { shareReady = null; if (typeof setShareLabel === 'function') setShareLabel(); render(); clearTimeout(tT); tT = setTimeout(() => photos.forEach((_, i) => thumb(i)), 150); };
@@ -143,7 +159,7 @@
     }
     if (photos.length && sel >= photos.length) sel = 0;
     renderList(); render();
-    msg(`${photos.length} foto siap. Foto 1 memakai frame utama dan judul.`);
+    msg(`${photos.length} foto siap. Tambah foto lagi kapan saja; foto baru memakai frame lanjutan.`);
   }
   const drop = $('drop'), fileIn = $('file');
   drop.onclick = () => fileIn.click();
